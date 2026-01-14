@@ -5,77 +5,80 @@ import 'package:royal_tint/data/models/appointment_model.dart';
 class AppointmentService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-/// Create a new appointment with slot validation
-Future<String?> createAppointment({
-  required String customerName,
-  required String customerPhone,
-  required String branchID,
-  required String vehicleBrand,
-  required String vehicleModel,
-  required String vehicleType,
-  required String vehiclePlate,
-  required String packageID,
-  required String packageName,
-  required String appointmentDate,
-  required String appointmentTime,
-  required String appointmentType, // 'scheduled' or 'walk-in'
-  String? notes,
-  required double totalPrice,
-  required int estimatedDuration, // in minutes
-}) async {
-  try {
-    // ⭐ STEP 1: Validate slot availability BEFORE creating
-    final existingAppointments = await getAppointmentsByDate(
-      branchID: branchID,
-      date: appointmentDate,
-    );
+  /// Create a new appointment with slot validation
+  Future<String?> createAppointment({
+    required String customerName,
+    required String customerPhone,
+    required String branchID,
+    required String vehicleBrand,
+    required String vehicleModel,
+    required String vehicleType,
+    required String vehiclePlate,
+    required String packageID,
+    required String packageName,
+    required String appointmentDate,
+    required String appointmentTime,
+    required String appointmentType, // 'scheduled' or 'walk-in'
+    String? notes,
+    required double totalPrice,
+    required int estimatedDuration, // in minutes
+  }) async {
+    try {
+      // ⭐ STEP 1: Validate slot availability BEFORE creating
+      final existingAppointments = await getAppointmentsByDate(
+        branchID: branchID,
+        date: appointmentDate,
+      );
 
-    // Check if slot can accept this appointment
-    if (!_canAcceptAppointment(existingAppointments, appointmentTime, estimatedDuration)) {
-      throw Exception('TIME_SLOT_FULL: This time slot is fully booked (max 2 cars)');
+      // Check if slot can accept this appointment
+      if (!_canAcceptAppointment(
+          existingAppointments, appointmentTime, estimatedDuration)) {
+        throw Exception(
+            'TIME_SLOT_FULL: This time slot is fully booked (max 2 cars)');
+      }
+
+      // ⭐ STEP 2: Create appointment (validation already done above)
+      // Create vehicle info map
+      final vehicleInfo = {
+        'brand': vehicleBrand,
+        'model': vehicleModel,
+        'type': vehicleType,
+        'plateNumber': vehiclePlate,
+      };
+
+      // Create appointment data
+      final appointmentData = {
+        'customerID': 'GUEST_${DateTime.now().millisecondsSinceEpoch}',
+        'customerName': customerName,
+        'customerPhone': customerPhone,
+        'branchID': branchID,
+        'vehicleInfo': vehicleInfo,
+        'packageID': packageID,
+        'packageName': packageName,
+        'appointmentDate': appointmentDate,
+        'appointmentTime': appointmentTime,
+        'appointmentType': appointmentType,
+        'estimatedDuration': estimatedDuration,
+        'status': 'pending',
+        'assignedStaffID': null,
+        'notes': notes,
+        'totalPrice': totalPrice,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      // Add to Firestore
+      final docRef =
+          await _firestore.collection('appointments').add(appointmentData);
+
+      return docRef.id;
+    } catch (e) {
+      if (e.toString().contains('TIME_SLOT_FULL')) {
+        rethrow; // Pass the specific error up
+      }
+      throw Exception('❌ Error creating appointment: $e');
     }
-
-    // ⭐ STEP 2: Create appointment (validation already done above)
-    // Create vehicle info map
-    final vehicleInfo = {
-      'brand': vehicleBrand,
-      'model': vehicleModel,
-      'type': vehicleType,
-      'plateNumber': vehiclePlate,
-    };
-
-    // Create appointment data
-    final appointmentData = {
-      'customerID': 'GUEST_${DateTime.now().millisecondsSinceEpoch}',
-      'customerName': customerName,
-      'customerPhone': customerPhone,
-      'branchID': branchID,
-      'vehicleInfo': vehicleInfo,
-      'packageID': packageID,
-      'packageName': packageName,
-      'appointmentDate': appointmentDate,
-      'appointmentTime': appointmentTime,
-      'appointmentType': appointmentType,
-      'estimatedDuration': estimatedDuration,
-      'status': 'pending',
-      'assignedStaffID': null,
-      'notes': notes,
-      'totalPrice': totalPrice,
-      'createdAt': FieldValue.serverTimestamp(),
-      'updatedAt': FieldValue.serverTimestamp(),
-    };
-
-    // Add to Firestore
-    final docRef = await _firestore.collection('appointments').add(appointmentData);
-    
-    return docRef.id;
-  } catch (e) {
-    if (e.toString().contains('TIME_SLOT_FULL')) {
-      rethrow; // Pass the specific error up
-    }
-    throw Exception('❌ Error creating appointment: $e');
   }
-}
 
   /// Update appointment details (for Edit dialog)
   Future<void> updateAppointment({
@@ -144,6 +147,8 @@ Future<String?> createAppointment({
   }
 
   /// Get appointments for a specific date
+  ///
+  /// ⭐ FILTERS: Only includes pending and confirmed appointments (excludes cancelled/completed)
   Future<List<AppointmentModel>> getAppointmentsByDate({
     required String branchID,
     required String date,
@@ -153,12 +158,25 @@ Future<String?> createAppointment({
           .collection('appointments')
           .where('branchID', isEqualTo: branchID)
           .where('appointmentDate', isEqualTo: date)
+          .where('status', whereIn: [
+            'pending',
+            'confirmed'
+          ]) // ⭐ FILTER: Exclude cancelled/completed
           .orderBy('appointmentTime', descending: false)
           .get();
 
-      return querySnapshot.docs
+      final appointments = querySnapshot.docs
           .map((doc) => AppointmentModel.fromFirestore(doc))
           .toList();
+
+      print(
+          '[AVAILABILITY] Fetched ${appointments.length} active appointments for $date');
+      for (final apt in appointments) {
+        print(
+            '[AVAILABILITY]   - ${apt.appointmentTime} (${apt.vehicleDisplay}, status: ${apt.status}, duration: ${apt.estimatedDuration}min)');
+      }
+
+      return appointments;
     } catch (e) {
       throw Exception('❌ Error fetching appointments by date: $e');
     }
@@ -177,7 +195,10 @@ Future<String?> createAppointment({
           .where('branchID', isEqualTo: branchID)
           .where('appointmentDate', isEqualTo: date)
           .where('appointmentTime', isEqualTo: time)
-          .where('status', whereIn: ['pending', 'confirmed']); // Only check active appointments
+          .where('status', whereIn: [
+        'pending',
+        'confirmed'
+      ]); // Only check active appointments
 
       final querySnapshot = await query.get();
 
@@ -205,18 +226,40 @@ Future<String?> createAppointment({
     final slotTime = _parseTimeSlot(timeSlot);
     final endTime = slotTime + durationMinutes;
 
+    print(
+        '[SLOT_CHECK] Checking availability for slot: $timeSlot (${_convertToTimeString(slotTime)}-${_convertToTimeString(endTime)}, duration: ${durationMinutes}min)');
+    print('[SLOT_CHECK] Slot time range: $slotTime - $endTime minutes');
+
     // Count overlapping appointments
-    final overlappingCount = dayAppointments.where((apt) {
+    final overlappingAppointments = <AppointmentModel>[];
+
+    for (final apt in dayAppointments) {
       final aptStartTime = _parseTimeSlot(apt.appointmentTime);
       final aptDuration = apt.estimatedDuration ?? 90; // Default 90 minutes
       final aptEndTime = aptStartTime + aptDuration;
 
       // Check if appointments overlap
-      return (aptStartTime < endTime && aptEndTime > slotTime);
-    }).length;
+      final isOverlapping = (aptStartTime < endTime && aptEndTime > slotTime);
+
+      if (isOverlapping) {
+        overlappingAppointments.add(apt);
+        print(
+            '[OVERLAP]   ✓ Overlaps: ${apt.appointmentTime} (${apt.vehicleBrand} ${apt.vehicleModel}, range: $aptStartTime-$aptEndTime, duration: ${aptDuration}min)');
+      } else {
+        print(
+            '[OVERLAP]   ✗ No overlap: ${apt.appointmentTime} (${apt.vehicleBrand} ${apt.vehicleModel}, range: $aptStartTime-$aptEndTime)');
+      }
+    }
+
+    final overlappingCount = overlappingAppointments.length;
+    final canAccept = overlappingCount < 2;
+
+    print(
+        '[SLOT_CHECK] Result: $overlappingCount overlapping appointments (max 2 allowed) = ${canAccept ? '✅ AVAILABLE' : '❌ FULLY BOOKED'}');
+    print('---');
 
     // Maximum 2 cars can be serviced at any given moment
-    return overlappingCount < 2;
+    return canAccept;
   }
 
   /// ⭐ Parse time slot to minutes since midnight (e.g., "14:30" -> 870)
@@ -225,5 +268,12 @@ Future<String?> createAppointment({
     final hour = int.parse(parts[0]);
     final minute = int.parse(parts[1]);
     return hour * 60 + minute;
+  }
+
+  /// ⭐ Convert minutes since midnight back to HH:MM format
+  String _convertToTimeString(int minutes) {
+    final hour = minutes ~/ 60;
+    final minute = minutes % 60;
+    return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
   }
 }
