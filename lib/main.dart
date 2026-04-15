@@ -1,46 +1,111 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'firebase_options.dart'; 
-import 'package:royal_tint/core/routes/app_router.dart';
-import 'package:royal_tint/core/theme/app_theme.dart';
-import 'package:royal_tint/features/auth/providers/auth_provider.dart';
-import 'package:royal_tint/features/manager/providers/manager_provider.dart';
 
-void main() async {
+import 'firebase_options.dart';
+import 'package:royal_tint/core/theme/app_theme.dart';
+
+// Routers
+import 'package:royal_tint/admin_web/core/routes/app_router.dart' as admin_router;
+import 'package:royal_tint/mobile_app/core/routes/app_router.dart' as mobile_router;
+
+import 'package:royal_tint/admin_web/core/theme/admin_theme.dart';
+//import 'package:royal_tint/mobile_app/core/theme/mobile_theme.dart';
+
+// Admin providers (only created when admin_web boots)
+import 'package:royal_tint/admin_web/features/auth/providers/auth_provider.dart' as admin_auth;
+import 'package:royal_tint/admin_web/features/dashboard/providers/manager_provider.dart';
+import 'package:royal_tint/admin_web/features/manager_shell/providers/manager_shell_provider.dart';
+import 'package:royal_tint/admin_web/features/appointments/providers/appointment_provider.dart';
+import 'package:royal_tint/admin_web/features/staff_management/providers/staff_registration_provider.dart';
+enum AppTarget { adminWeb, mobileApp }
+
+AppTarget _resolveAppTarget() {
+  // Compile-time env value:
+  // flutter run --dart-define=APP_TARGET=admin_web
+  // flutter run --dart-define=APP_TARGET=mobile_app
+  const raw = String.fromEnvironment('APP_TARGET');
+
+  switch (raw) {
+    case 'admin_web':
+      return AppTarget.adminWeb;
+    case 'mobile_app':
+      return AppTarget.mobileApp;
+    case '':
+      // Fallback if not provided:
+      return kIsWeb ? AppTarget.adminWeb : AppTarget.mobileApp;
+    default:
+      // If typo, fallback too (you can also assert/throw).
+      return kIsWeb ? AppTarget.adminWeb : AppTarget.mobileApp;
+  }
+}
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize Firebase
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  
-  runApp(const MyApp());
+
+  final target = _resolveAppTarget();
+  runApp(MyApp(appTarget: target));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
- 
+class MyApp extends StatefulWidget {
+  final AppTarget appTarget;
+  const MyApp({super.key, required this.appTarget});
+
+  @override
+    State<MyApp> createState() => _MyAppState();
+  }
+
+  class _MyAppState extends State<MyApp> {
+    @override
+    void initState() {
+      super.initState();
+
+      // Option 1: Force logout every launch (ADMIN WEB only)
+      if (widget.appTarget == AppTarget.adminWeb) {
+        FirebaseAuth.instance.signOut();
+      }
+    }
+
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => ManagerProvider()),
-      ],
-      child: Builder(
-        builder: (context) {
-          // Get AuthProvider from context
-          final authProvider = Provider.of<AuthProvider>(context, listen: false);
-          
-          return MaterialApp.router(
-            title: 'Royal Tint Digital Platform',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme,
-            routerConfig: AppRouter.router(authProvider),
-          );
-        },
-      ),
+    // ADMIN WEB APP
+    if (widget.appTarget == AppTarget.adminWeb) {
+      return MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => admin_auth.AuthProvider()),
+          ChangeNotifierProvider(create: (_) => ManagerProvider()),
+          ChangeNotifierProvider(create: (_) => ManagerShellProvider()),
+          ChangeNotifierProvider(create: (_) => AppointmentProvider()),
+          ChangeNotifierProvider(create: (_) => StaffRegistrationProvider()),
+        ],
+        child: Builder(
+          builder: (context) {
+            final authProvider =
+                Provider.of<admin_auth.AuthProvider>(context, listen: false);
+
+            return MaterialApp.router(
+              title: 'Royal Tint Digital Platform (Admin)',
+              debugShowCheckedModeBanner: false,
+              theme: AdminTheme.theme,
+              routerConfig: admin_router.AdminWebAppRouter.router(authProvider),
+            );
+          },
+        ),
+      );
+    }
+
+    // MOBILE APP
+    return MaterialApp.router(
+      title: 'Royal Tint (Mobile)',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      routerConfig: mobile_router.MobileAppRouter.router(),
     );
   }
 }

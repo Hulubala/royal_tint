@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:royal_tint/data/models/user_model.dart';
-import 'package:royal_tint/data/models/manager_model.dart';
+import 'package:royal_tint/domain/models/user/user_model.dart';
+import 'package:royal_tint/domain/models/user/manager_model.dart';
 import 'package:royal_tint/core/constants/firebase_constants.dart';
 
 class AuthRepository {
@@ -13,38 +13,38 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
-    try {
-      // Sign in with Firebase Auth
-      UserCredential userCredential = await _firebaseAuth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+    // Sign in with Firebase Auth
+    UserCredential userCredential = await _firebaseAuth.signInWithEmailAndPassword(
+      email: email.trim().toLowerCase(),
+      password: password,
+    );
 
-      User? user = userCredential.user;
-      if (user == null) {
-        throw Exception('Sign in failed');
-      }
-
-      // Get user data from Firestore
-      UserModel? userData = await getUserData(user.uid);
-      if (userData == null) {
-        throw Exception('User data not found');
-      }
-
-      // Get manager data if user is a manager
-      ManagerModel? managerData;
-      if (userData.isManager) {
-        managerData = await getManagerData(user.uid);
-      }
-
-      return {
-        'user': user,
-        'userData': userData,
-        'managerData': managerData,
-      };
-    } catch (e) {
-      throw Exception(e.toString());
+    final user = userCredential.user;
+    if (user == null) {
+      throw Exception('Sign in failed');
     }
+
+    // Get user data from Firestore
+    final userData = await getUserData(user.uid);
+    if (userData == null) {
+      throw Exception('User data not found in Firestore for uid=${user.uid}');
+    }
+
+    // Get manager data if user is a manager
+    ManagerModel? managerData;
+    if (userData.isManager) {
+      managerData = await getManagerData(user.uid);
+    }
+
+    if (managerData == null) {
+      throw Exception('Manager data not found in Firestore for uid=${user.uid}');
+    }
+
+    return {
+      'user': user,
+      'userData': userData,
+      'managerData': managerData,
+    };
   }
 
   /// Get user data from Firestore
@@ -84,6 +84,21 @@ class AuthRepository {
     }
   }
 
+  Future<bool> managerEmailExists(String email) async {
+    try {
+      final e = email.trim().toLowerCase();
+
+      final doc = await _firestore
+          .collection('manager_email_lookup')
+          .doc(e)
+          .get();
+
+      return doc.exists;
+    } catch (e) {
+      throw Exception('Failed to check manager email: $e');
+    }
+  }
+
   /// Sign out
   Future<void> signOut() async {
     try {
@@ -93,10 +108,22 @@ class AuthRepository {
     }
   }
 
-  /// Send password reset email
-  Future<void> sendPasswordResetEmail(String email) async {
+  /// Send password reset email + redirect back to your login page after reset
+  Future<void> sendPasswordResetEmail({
+    required String email,
+    required String continueUrl,
+  }) async {
     try {
-      await _firebaseAuth.sendPasswordResetEmail(email: email);
+      await _firebaseAuth.sendPasswordResetEmail(
+        email: email.trim().toLowerCase(),
+        actionCodeSettings: ActionCodeSettings(
+          url: continueUrl,
+          handleCodeInApp: false,
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      // Keep Firebase's error code info
+      throw Exception('${e.code}: ${e.message}');
     } catch (e) {
       throw Exception('Failed to send password reset email: $e');
     }
@@ -104,15 +131,11 @@ class AuthRepository {
 
   /// Update password
   Future<void> updatePassword(String newPassword) async {
-    try {
-      User? user = _firebaseAuth.currentUser;
+    final user = _firebaseAuth.currentUser;
       if (user == null) {
         throw Exception('No user signed in');
       }
       await user.updatePassword(newPassword);
-    } catch (e) {
-      throw Exception('Failed to update password: $e');
-    }
   }
 
   /// Get current user
