@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:royal_tint/admin_web/features/auth/providers/auth_provider.dart' as auth;
-import 'package:royal_tint/admin_web/features/staff_management/models/staff_registration_request.dart';
-import 'package:royal_tint/admin_web/features/staff_management/providers/staff_registration_provider.dart';
-import 'package:royal_tint/admin_web/features/staff_management/models/staff_registration_result.dart';
+import 'package:royal_tint/admin_web/features/staff_management/register_staff/models/staff_registration_request.dart';
+import 'package:royal_tint/admin_web/features/staff_management/register_staff/providers/staff_registration_provider.dart';
+import 'package:royal_tint/admin_web/features/staff_management/register_staff/models/staff_registration_result.dart';
 
 class StaffRegistrationController {
   Future<StaffRegistrationResult> register(

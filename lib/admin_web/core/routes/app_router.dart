@@ -6,7 +6,8 @@ import 'package:royal_tint/admin_web/features/auth/providers/auth_provider.dart'
 import 'package:royal_tint/admin_web/features/appointments/screens/appointment_management_screen.dart';
 import 'package:royal_tint/admin_web/features/dashboard/screens/manager_dashboard_screen.dart';
 import 'package:royal_tint/admin_web/features/manager_shell/widgets/manager_layout.dart';
-import 'package:royal_tint/admin_web/features/staff_management/screens/staff_registration_screen.dart';
+import 'package:royal_tint/admin_web/features/staff_management/register_staff/screens/staff_registration_screen.dart';
+import 'package:royal_tint/admin_web/features/profiles/screens/profile_screen.dart';
 import 'package:royal_tint/admin_web/features/auth/screens/login_screen.dart';
 
 /// Admin Web router (manager portal).
@@ -188,10 +189,7 @@ class AdminWebAppRouter {
           path: '/manager/profile',
           name: 'profile',
           builder: (context, state) => const ManagerLayout(
-            child: _PlaceholderPage(
-              title: 'My Profile',
-              icon: BootstrapIcons.person_circle,
-            ),
+            child: ProfileScreen(),
           ),
         ),
       ],

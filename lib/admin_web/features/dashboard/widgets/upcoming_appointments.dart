@@ -13,7 +13,7 @@ class UpcomingAppointments extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SectionContainer(
-      title: 'Upcoming Appointments',
+      title: 'Today Appointments',
       icon: BootstrapIcons.calendar3,
       trailing: GestureDetector(
         onTap: () => context.go('/manager/appointments'),

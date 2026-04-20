@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:royal_tint/admin_web/features/auth/providers/auth_provider.dart' as auth;
-import 'package:royal_tint/admin_web/features/staff_management/models/staff_registration_request.dart';
-import 'package:royal_tint/admin_web/features/staff_management/models/staff_registration_result.dart';
-import 'package:royal_tint/admin_web/features/staff_management/services/staff_service.dart';
+import 'package:royal_tint/admin_web/features/staff_management/register_staff/models/staff_registration_request.dart';
+import 'package:royal_tint/admin_web/features/staff_management/register_staff/models/staff_registration_result.dart';
+import 'package:royal_tint/admin_web/features/staff_management/register_staff/services/staff_service.dart';
 
 class StaffRegistrationProvider extends ChangeNotifier {
   final FirebaseAuth _auth;

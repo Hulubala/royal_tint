@@ -19,7 +19,8 @@ import 'package:royal_tint/admin_web/features/auth/providers/auth_provider.dart'
 import 'package:royal_tint/admin_web/features/dashboard/providers/manager_provider.dart';
 import 'package:royal_tint/admin_web/features/manager_shell/providers/manager_shell_provider.dart';
 import 'package:royal_tint/admin_web/features/appointments/providers/appointment_provider.dart';
-import 'package:royal_tint/admin_web/features/staff_management/providers/staff_registration_provider.dart';
+import 'package:royal_tint/admin_web/features/staff_management/register_staff/providers/staff_registration_provider.dart';
+import 'package:royal_tint/admin_web/features/profiles/providers/profile_provider.dart';
 enum AppTarget { adminWeb, mobileApp }
 
 AppTarget _resolveAppTarget() {
@@ -83,6 +84,7 @@ class MyApp extends StatefulWidget {
           ChangeNotifierProvider(create: (_) => ManagerShellProvider()),
           ChangeNotifierProvider(create: (_) => AppointmentProvider()),
           ChangeNotifierProvider(create: (_) => StaffRegistrationProvider()),
+          ChangeNotifierProvider(create: (_) => ProfileProvider()),
         ],
         child: Builder(
           builder: (context) {

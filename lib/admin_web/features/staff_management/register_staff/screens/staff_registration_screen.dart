@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:royal_tint/admin_web/features/staff_management/controllers/staff_registration_controller.dart';
-import 'package:royal_tint/admin_web/features/staff_management/dialogs/staff_registration_success_dialog.dart';
-import 'package:royal_tint/admin_web/features/staff_management/providers/staff_registration_provider.dart';
-import 'package:royal_tint/admin_web/features/staff_management/widgets/staff_registration_form_panel.dart';
-import 'package:royal_tint/admin_web/features/staff_management/widgets/staff_registration_header_panel.dart';
+import 'package:royal_tint/admin_web/features/staff_management/register_staff/controllers/staff_registration_controller.dart';
+import 'package:royal_tint/admin_web/features/staff_management/register_staff/dialogs/staff_registration_success_dialog.dart';
+import 'package:royal_tint/admin_web/features/staff_management/register_staff/providers/staff_registration_provider.dart';
+import 'package:royal_tint/admin_web/features/staff_management/register_staff/widgets/staff_registration_form_panel.dart';
+import 'package:royal_tint/admin_web/features/staff_management/register_staff/widgets/staff_registration_header_panel.dart';
 
 class StaffRegistrationScreen extends StatefulWidget {
   const StaffRegistrationScreen({super.key});

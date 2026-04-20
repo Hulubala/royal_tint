@@ -1,7 +1,7 @@
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:royal_tint/admin_web/features/staff_management/widgets/staff_input_decoration.dart';
+import 'package:royal_tint/admin_web/features/staff_management/register_staff/widgets/staff_input_decoration.dart';
 import 'package:royal_tint/core/utils/validators.dart';
 import 'staff_registration_panel_decoration.dart';
 

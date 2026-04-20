@@ -1,6 +1,6 @@
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:royal_tint/admin_web/features/staff_management/widgets/staff_registration_info_row.dart';
+import 'package:royal_tint/admin_web/features/staff_management/register_staff/widgets/staff_registration_info_row.dart';
 
 class StaffRegistrationSuccessDialog extends StatelessWidget {
   final String staffEmail;
