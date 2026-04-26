@@ -21,6 +21,7 @@ class MenuDropdown<T> extends StatefulWidget {
   final bool enabled;
   final double? width;
   final double menuMaxHeight;
+  final bool showItemLeading;
 
   const MenuDropdown({
     super.key,
@@ -33,6 +34,7 @@ class MenuDropdown<T> extends StatefulWidget {
     this.enabled = true,
     this.width,
     this.menuMaxHeight = 320,
+    this.showItemLeading = true,
   });
 
   @override
@@ -220,7 +222,7 @@ class _MenuDropdownState<T> extends State<MenuDropdown<T>> {
                                     ),
                                     child: Row(
                                       children: [
-                                        if (item.leading != null) ...[
+                                        if (widget.showItemLeading && item.leading != null) ...[
                                           item.leading!,
                                           const SizedBox(width: 10),
                                         ],

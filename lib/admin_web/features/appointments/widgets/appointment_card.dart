@@ -1,4 +1,3 @@
-// lib/admin_web/features/appointments/widgets/appointment_card.dart
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:flutter/material.dart';
 

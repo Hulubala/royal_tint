@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:royal_tint/domain/models/appointment_model.dart';
+import 'package:royal_tint/core/constants/tint_constants.dart';
 import 'package:royal_tint/admin_web/features/auth/providers/auth_provider.dart';
 import 'package:royal_tint/admin_web/features/appointments/providers/appointment_provider.dart';
 import 'package:royal_tint/admin_web/features/appointments/controllers/appointment_controller.dart';
@@ -617,122 +618,58 @@ class _AppointmentManagementScreenState
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(24),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Customer Information Section
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                              colors: [Color(0xFFFFD700), Color(0xFFFFC700)]),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(BootstrapIcons.person_circle,
-                                color: Colors.black, size: 20),
-                            SizedBox(width: 12),
-                            Text('CUSTOMER INFORMATION',
-                                style: TextStyle(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14)),
-                          ],
-                        ),
-                      ),
+                      _buildSectionHeader('CUSTOMER INFORMATION', BootstrapIcons.person_circle),
                       const SizedBox(height: 16),
-
                       _buildViewRow('NAME:', appointment.customerName),
                       const SizedBox(height: 12),
-                      _buildViewRow(
-                          'PHONE:',
-                          _formatPhoneNumber(
-                              appointment.customerPhone ?? 'N/A')),
+                      _buildViewRow('PHONE:', _formatPhoneNumber(appointment.customerPhone ?? 'N/A')),
 
                       const SizedBox(height: 24),
 
                       // Vehicle Information Section
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                              colors: [Color(0xFFFFD700), Color(0xFFFFC700)]),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(BootstrapIcons.car_front_fill,
-                                color: Colors.black, size: 20),
-                            SizedBox(width: 12),
-                            Text('VEHICLE INFORMATION',
-                                style: TextStyle(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14)),
-                          ],
-                        ),
-                      ),
+                      _buildSectionHeader('VEHICLE INFORMATION', BootstrapIcons.car_front_fill),
                       const SizedBox(height: 16),
-
-                      _buildViewRow('CAR MODEL:',
-                          '${appointment.vehicleBrand} ${appointment.vehicleModel}'),
+                      _buildViewRow('CAR MODEL:', '${appointment.vehicleBrand} ${appointment.vehicleModel}'),
                       const SizedBox(height: 12),
                       _buildViewRow('CAR PLATE:', appointment.vehiclePlate),
 
                       const SizedBox(height: 24),
 
                       // Appointment Details Section
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                              colors: [Color(0xFFFFD700), Color(0xFFFFC700)]),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(BootstrapIcons.calendar_check,
-                                color: Colors.black, size: 20),
-                            SizedBox(width: 12),
-                            Text('APPOINTMENT DETAILS',
-                                style: TextStyle(
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14)),
-                          ],
-                        ),
-                      ),
+                      _buildSectionHeader('APPOINTMENT DETAILS', BootstrapIcons.calendar_check),
                       const SizedBox(height: 16),
-
-                      _buildViewRow(
-                          'DATE:', _formatDate(appointment.appointmentDate)),
+                      _buildViewRow('DATE:', _formatDate(appointment.appointmentDate)),
                       const SizedBox(height: 12),
-                      _buildViewRow(
-                          'TIME:', _formatTime(appointment.appointmentTime)),
+                      _buildViewRow('TIME:', _formatTime(appointment.appointmentTime)),
                       const SizedBox(height: 12),
                       _buildViewRow('PACKAGE:', appointment.packageName),
                       const SizedBox(height: 12),
-                      _buildViewRow('PRICE:',
-                          'RM ${appointment.totalPrice.toStringAsFixed(2)}'),
+                      _buildViewRow('PRICE:', 'RM ${appointment.totalPrice.toStringAsFixed(2)}'),
                       const SizedBox(height: 12),
                       _buildViewRow(
-                          'STATUS:',
-                          isInProgress
-                              ? 'IN-PROGRESS'
-                              : appointment.status.toUpperCase()),
-
-                      // Show finish time for completed appointments
+                        'STATUS:',
+                        isInProgress ? 'IN-PROGRESS' : appointment.status.toUpperCase(),
+                      ),
                       if (isCompleted) ...[
                         const SizedBox(height: 12),
                         _buildViewRow(
                           'FINISH SERVICE TIME:',
-                            DateFormat('dd/MM/yyyy hh:mm a')
-                              .format(appointment.updatedAt)
+                          DateFormat('MMM dd, yyyy hh:mm a').format(appointment.updatedAt),
                         ),
                       ],
 
-                      if (appointment.notes != null &&
-                          appointment.notes!.isNotEmpty) ...[
-                        const SizedBox(height: 12),
+                      // Darkness Tinted Section
+                      const SizedBox(height: 24),
+                      _buildSectionHeader('DARKNESS TINTED', BootstrapIcons.droplet_half),
+                      const SizedBox(height: 16),
+                      ...buildTintRows(appointment.tintSelections, appointment.packageName),
+
+                      // Notes Section
+                      if (appointment.notes != null && appointment.notes!.isNotEmpty) ...[
+                        const SizedBox(height: 24),
                         _buildViewRow('NOTES:', appointment.notes!),
                       ],
                     ],
@@ -797,6 +734,31 @@ class _AppointmentManagementScreenState
     );
   }
 
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+            colors: [Color(0xFFFFD700), Color(0xFFFFC700)]), // Yellow gradient
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.black, size: 20), // Icon with title
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildViewRow(String label, String value) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -825,6 +787,30 @@ class _AppointmentManagementScreenState
         ],
       ),
     );
+  }
+
+  List<Widget> buildTintRows(Map<String, String> tintSelections, String packageName) {
+    // Define the preferred order of tint sections
+    final preferredOrder = [
+      'frontWindshield',
+      'rearWindshield',
+      'leftSide',
+      'rightSide',
+    ];
+
+    // Sort tint sections based on preferred order
+    final sortedEntries = preferredOrder.map((key) {
+      if (tintSelections.containsKey(key)) {
+        final section = key
+            .replaceAllMapped(RegExp(r'([A-Z])'), (match) => ' ${match.group(0)}')
+            .toUpperCase(); // Convert to uppercase
+        final darknessCode = mapVLTtoCode(tintSelections[key]!, packageName); // Convert VLT -> Code
+        return _buildViewRow('$section:', darknessCode);
+      }
+      return const SizedBox.shrink(); // Handle missing keys gracefully (shouldn't happen)
+    }).toList();
+
+    return sortedEntries;
   }
 
   void editAppointment(AppointmentModel appointment) {

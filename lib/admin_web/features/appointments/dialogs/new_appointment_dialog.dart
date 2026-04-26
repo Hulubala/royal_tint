@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:intl/intl.dart';
+import 'package:royal_tint/core/constants/tint_constants.dart';
 import 'package:royal_tint/core/widgets/custom_menu_dropdown.dart';
 import 'package:royal_tint/data/repositories/vehicle_repository.dart';
 import 'package:royal_tint/data/services/appointment_service.dart';
@@ -13,7 +14,6 @@ import 'package:royal_tint/admin_web/features/appointments/dialogs/thirty_minute
 class NewAppointmentDialog extends StatefulWidget {
   final String branchID;
   final Future<void> Function()? onSaved;
-
 
   const NewAppointmentDialog({super.key, required this.branchID, this.onSaved});
 
@@ -46,6 +46,22 @@ class _NewAppointmentDialogState extends State<NewAppointmentDialog> {
   TintPackageModel? _selectedPackage;
   bool _isLoadingPackages = true;
   double _calculatedPrice = 0.0;
+
+  Map<String, String> _tintSelections = {
+    'frontWindshield': '',
+    'rearWindshield': '',
+    'leftSide': '',
+    'rightSide': '',
+  };
+
+  bool _isTintSelectionValid() {
+    for (final key in _tintSelections.keys) {
+      if (_tintSelections[key] == null || _tintSelections[key]!.isEmpty) {
+        return false; 
+      }
+    }
+    return true;
+  }
 
   bool _isSaving = false;
 
@@ -95,6 +111,15 @@ class _NewAppointmentDialogState extends State<NewAppointmentDialog> {
       setState(() {
         _selectedPackage = package;
         _updatePrice();
+
+        final opts = package.darknessOptions;
+        final def = opts.isNotEmpty ? opts.first : '';
+        _tintSelections = {
+          'frontWindshield': def,
+          'rearWindshield': def,
+          'leftSide': def,
+          'rightSide': def,
+        };
       });
     }
   }
@@ -342,6 +367,8 @@ class _NewAppointmentDialogState extends State<NewAppointmentDialog> {
                             _buildTimePicker(),
                             const SizedBox(height: 16),
                             _buildPackageDropdown(),
+                            const SizedBox(height: 16),
+                            _buildTintSelections(),
                             const SizedBox(height: 16),
                             if (_calculatedPrice > 0) ...[
                               Container(
@@ -627,6 +654,71 @@ class _NewAppointmentDialogState extends State<NewAppointmentDialog> {
         final pkg = _packages.firstWhere((x) => x.packageID == id);
         _onPackageChanged(pkg);
       },
+    );
+  }
+
+  Widget _buildTintSelections() {
+    final options = kPackageDarknessFallback[_selectedPackage?.packageName ?? ''] ?? [];
+
+    // If no options are available, show an error message
+    if (options.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.red, width: 2),
+        ),
+        child: const Text(
+          'No darkness options available for the selected package. Please update your package.',
+          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+        ),
+      );
+    }
+
+    print('Package Name: ${_selectedPackage?.packageName}');
+    print('Darkness Options: $options');
+
+    // Helper for building dropdowns for each tint section
+    MenuDropdown<String> tintDropdown(String label, String key) {
+      return MenuDropdown<String>(
+        label: label,
+        icon: BootstrapIcons.droplet_half,
+        value: _tintSelections[key] != null ? mapVLTtoCode(_tintSelections[key]!, _selectedPackage?.packageName ?? '') : null,
+        hint: 'Select darkness',
+        items: options.map((code) {
+          return MenuItem<String>(
+            value: code, 
+            label: code,
+          );
+        }).toList(),
+        onChanged: (value) {
+          if (value == null) return;
+          setState(() {
+            _tintSelections[key] = mapSVtoVLT(value); 
+          });
+        },
+      );
+    }
+
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(child: tintDropdown('Front Windshield', 'frontWindshield')),
+            const SizedBox(width: 12),
+            Expanded(child: tintDropdown('Rear Windshield', 'rearWindshield')),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(child: tintDropdown('Left Side', 'leftSide')),
+            const SizedBox(width: 12),
+            Expanded(child: tintDropdown('Right Side', 'rightSide')),
+          ],
+        ),
+      ],
     );
   }
 
@@ -950,6 +1042,13 @@ class _NewAppointmentDialogState extends State<NewAppointmentDialog> {
       return;
     }
 
+    if (!_isTintSelectionValid()) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Please select a darkness paper for all sections!'),
+        backgroundColor: Colors.red));
+      return;
+    }
+
     setState(() => _isSaving = true);
 
     try {
@@ -972,6 +1071,7 @@ class _NewAppointmentDialogState extends State<NewAppointmentDialog> {
         vehiclePlate: _plateController.text.trim(),
         packageID: _selectedPackage!.packageID,
         packageName: _selectedPackage!.packageName,
+        tintSelections: _tintSelections,
         appointmentDate: appointmentDate,
         appointmentTime: appointmentTime,
         appointmentType: _appointmentType,

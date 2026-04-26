@@ -16,6 +16,7 @@ class AppointmentService {
     required String vehiclePlate,
     required String packageID,
     required String packageName,
+    required Map<String, String> tintSelections,
     required String appointmentDate,
     required String appointmentTime,
     required String appointmentType, // 'scheduled' or 'walk-in'
@@ -55,6 +56,7 @@ class AppointmentService {
         'vehicleInfo': vehicleInfo,
         'packageID': packageID,
         'packageName': packageName,
+        'tintSelections': tintSelections,
         'appointmentDate': appointmentDate,
         'appointmentTime': appointmentTime,
         'appointmentType': appointmentType,
@@ -90,6 +92,7 @@ class AppointmentService {
     required String appointmentTime,
     required String packageID,
     required String packageName,
+    Map<String, String>? tintSelections, 
     String? notes,
   }) async {
     try {
@@ -102,6 +105,7 @@ class AppointmentService {
         'packageID': packageID,
         'packageName': packageName,
         'notes': notes,
+        if (tintSelections != null) 'tintSelections': tintSelections,
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {

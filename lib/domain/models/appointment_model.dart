@@ -12,6 +12,7 @@ class AppointmentModel {
   final String vehiclePlate;
   final String packageID;
   final String packageName;
+  final Map<String, String> tintSelections;
   final String appointmentDate;
   final String appointmentTime;
   final String appointmentType;
@@ -35,6 +36,7 @@ class AppointmentModel {
     required this.vehiclePlate,
     required this.packageID,
     required this.packageName,
+    required this.tintSelections,
     required this.appointmentDate,
     required this.appointmentTime,
     required this.appointmentType,
@@ -95,6 +97,12 @@ class AppointmentModel {
 
   factory AppointmentModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+    final tintRaw = (data['tintSelections'] as Map?)?.cast<String, dynamic>() ?? {};
+    final tintSelections = <String, String>{};
+
+    for (final e in tintRaw.entries) {
+      tintSelections[e.key] = e.value?.toString() ?? '';
+    }
     
     print('🔍 Parsing appointment: ${doc.id}');
     print('📋 Raw data keys: ${data.keys.toList()}');
@@ -157,6 +165,7 @@ class AppointmentModel {
       vehiclePlate: vehiclePlate,
       packageID: data['packageID'] ?? '',
       packageName: data['packageName'] ?? '',
+      tintSelections: tintSelections,
       appointmentDate: data['appointmentDate'] ?? '',
       appointmentTime: data['appointmentTime'] ?? '',
       appointmentType: data['appointmentType'] ?? 'scheduled',
@@ -187,6 +196,7 @@ class AppointmentModel {
       },
       'packageID': packageID,
       'packageName': packageName,
+      'tintSelections': tintSelections,
       'appointmentDate': appointmentDate,
       'appointmentTime': appointmentTime,
       'appointmentType': appointmentType,
@@ -212,6 +222,7 @@ class AppointmentModel {
     String? vehiclePlate,
     String? packageID,
     String? packageName,
+    Map<String, String>? tintSelections,
     String? appointmentDate,
     String? appointmentTime,
     String? appointmentType,
@@ -235,6 +246,7 @@ class AppointmentModel {
       vehiclePlate: vehiclePlate ?? this.vehiclePlate,
       packageID: packageID ?? this.packageID,
       packageName: packageName ?? this.packageName,
+      tintSelections: tintSelections ?? this.tintSelections,
       appointmentDate: appointmentDate ?? this.appointmentDate,
       appointmentTime: appointmentTime ?? this.appointmentTime,
       appointmentType: appointmentType ?? this.appointmentType,

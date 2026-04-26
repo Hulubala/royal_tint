@@ -1,22 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-/// Tint Package Model
-/// Matches the package structure created in Firebase setup
 class TintPackageModel {
   final String packageID;
   final String packageName;
   final String description;
   final double originalPrice;
   final String filmType;
-  final String heatRejection; // IRR - Infrared Rejection
-  final String uvRejection;   // UVR - UV Rejection
-  final List<String> darknessOptions; // VLT options
+  final String heatRejection; 
+  final String uvRejection;   
+  final List<String> darknessOptions;
   final String thickness;
   final String warranty;
-  final Map<String, int> duration; // Duration by vehicle type (minutes)
+  final Map<String, int> duration; 
   final bool isActive;
   final List<String> freeItems;
-  final Map<String, double> pricing; // Price by vehicle type
+  final Map<String, double> pricing; 
   final List<String> features;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -41,7 +38,6 @@ class TintPackageModel {
     this.updatedAt,
   });
 
-  /// Create from Firestore document
   factory TintPackageModel.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
     
@@ -74,7 +70,6 @@ class TintPackageModel {
     );
   }
 
-  /// Convert to Firestore map
   Map<String, dynamic> toFirestore() {
     return {
       'packageID': packageID,
@@ -98,10 +93,6 @@ class TintPackageModel {
       'updatedAt': FieldValue.serverTimestamp(),
     };
   }
-
-  // ============================================
-  // HELPER METHODS
-  // ============================================
 
   /// Get price for specific vehicle type
   double getPriceForVehicle(String vehicleType) {

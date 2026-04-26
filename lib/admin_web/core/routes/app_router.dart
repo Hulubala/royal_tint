@@ -7,6 +7,7 @@ import 'package:royal_tint/admin_web/features/appointments/screens/appointment_m
 import 'package:royal_tint/admin_web/features/dashboard/screens/manager_dashboard_screen.dart';
 import 'package:royal_tint/admin_web/features/manager_shell/widgets/manager_layout.dart';
 import 'package:royal_tint/admin_web/features/staff_management/register_staff/screens/staff_registration_screen.dart';
+import 'package:royal_tint/admin_web/features/staff_management/staff_tasks/screens/staff_tasks_screen.dart';
 import 'package:royal_tint/admin_web/features/profiles/screens/profile_screen.dart';
 import 'package:royal_tint/admin_web/features/auth/screens/login_screen.dart';
 
@@ -133,10 +134,7 @@ class AdminWebAppRouter {
           path: '/manager/staff-tasks',
           name: 'staff-tasks',
           builder: (context, state) => const ManagerLayout(
-            child: _PlaceholderPage(
-              title: 'Staff Tasks',
-              icon: BootstrapIcons.list_task,
-            ),
+            child: StaffTasksScreen(),
           ),
         ),
 
