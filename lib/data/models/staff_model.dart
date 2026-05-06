@@ -18,6 +18,7 @@ class StaffModel {
   final List<String> skills;
   final double rating;
   final int completedJobs;
+  final int currentTaskCount;
 
   StaffModel({
     required this.id,
@@ -35,6 +36,7 @@ class StaffModel {
     this.skills = const [],
     this.rating = 0.0,
     this.completedJobs = 0,
+    this.currentTaskCount = 0,
   });
 
   /// Create StaffModel from Firestore document
@@ -56,7 +58,8 @@ class StaffModel {
       profileImageUrl: data['profileImageUrl'],
       skills: List<String>.from(data['skills'] ?? []),
       rating: (data['rating'] ?? 0.0).toDouble(),
-      completedJobs: data['completedJobs'] ?? 0,
+      completedJobs: data['completedJobs'] ?? data['totalCompletedTasks'] ?? 0,
+      currentTaskCount: data['currentTaskCount'] ?? 0,
     );
   }
 
@@ -83,7 +86,8 @@ class StaffModel {
       profileImageUrl: json['profileImageUrl'],
       skills: List<String>.from(json['skills'] ?? []),
       rating: (json['rating'] ?? 0.0).toDouble(),
-      completedJobs: json['completedJobs'] ?? 0,
+      completedJobs: json['completedJobs'] ?? json['totalCompletedTasks'] ?? 0,
+      currentTaskCount: json['currentTaskCount'] ?? 0,
     );
   }
 
@@ -130,6 +134,7 @@ class StaffModel {
     List<String>? skills,
     double? rating,
     int? completedJobs,
+    int? currentTaskCount,
   }) {
     return StaffModel(
       id: id ?? this.id,
@@ -147,6 +152,7 @@ class StaffModel {
       skills: skills ?? this.skills,
       rating: rating ?? this.rating,
       completedJobs: completedJobs ?? this.completedJobs,
+      currentTaskCount: currentTaskCount ?? this.currentTaskCount,
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:royal_tint/features/manager/screens/staff_registration_screen.dart';
+import 'package:royal_tint/features/manager/screens/staff_task_assignment_screen.dart';
 import 'package:royal_tint/features/manager/widgets/manager_layout.dart';
 import 'package:royal_tint/features/manager/screens/manager_dashboard_screen.dart';
 import 'package:royal_tint/features/manager/screens/appointment_management_screen.dart';
@@ -137,10 +138,7 @@ class AppRouter {
           name: 'staff-tasks',
           builder: (context, state) => const ManagerLayout(
             currentRoute: '/manager/staff-tasks',
-            child: _PlaceholderPage(
-              title: 'Staff Tasks',
-              icon: BootstrapIcons.list_task,
-            ),
+            child: StaffTaskAssignmentScreen(),
           ),
         ),
         
