@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:royal_tint/data/models/appointment_model.dart';
+import 'package:royal_tint/data/repositories/task_repository.dart';
 
 /// Service for managing appointments in Firebase
 class AppointmentService {
@@ -124,9 +125,17 @@ class AppointmentService {
     }
   }
 
-  /// Delete appointment
+  /// Delete appointment and clean up any linked tasks.
+  ///
+  /// Any PENDING or IN_PROGRESS tasks that reference [appointmentID] are
+  /// cancelled and the assigned staff members' [currentTaskCount] is
+  /// decremented before the appointment document is removed.
   Future<void> deleteAppointment(String appointmentID) async {
     try {
+      // 1. Cancel tasks linked to this appointment and fix staff task counts
+      await TaskRepository().cancelTasksForAppointment(appointmentID);
+
+      // 2. Delete the appointment document
       await _firestore.collection('appointments').doc(appointmentID).delete();
     } catch (e) {
       throw Exception('❌ Error deleting appointment: $e');
