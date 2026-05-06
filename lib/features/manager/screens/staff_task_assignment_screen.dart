@@ -28,6 +28,10 @@ class _StaffTaskAssignmentScreenState extends State<StaffTaskAssignmentScreen> {
   static const _gold = Color(0xFFFFD700);
   static const _darkBg = Color(0xFF1A1A1A);
 
+  // ── Business rules ──────────────────────────────────────────────────────
+  // Default number of hours added to now to set the task due date.
+  static const int _defaultTaskDueHours = 8;
+
   @override
   void initState() {
     super.initState();
@@ -312,7 +316,7 @@ class _StaffTaskAssignmentScreenState extends State<StaffTaskAssignmentScreen> {
         packageName: appointment.packageName,
         status: TaskStatus.pending,
         priority: priority,
-        dueDate: DateTime.now().add(const Duration(hours: 8)),
+        dueDate: DateTime.now().add(const Duration(hours: _defaultTaskDueHours)),
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );

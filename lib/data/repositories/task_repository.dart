@@ -17,9 +17,10 @@ class TaskRepository {
 
     final batch = _firestore.batch();
 
-    // Write the task document
+    // Write the task document (include the generated ID in the document itself)
     batch.set(taskRef, {
       ...task.toFirestore(),
+      'taskID': taskRef.id,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
@@ -90,7 +91,10 @@ class TaskRepository {
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      // Decrement the staff member's currentTaskCount (floor at 0)
+      // Decrement the staff member's currentTaskCount.
+      // Firestore does not natively floor at 0, but currentTaskCount should
+      // never be negative in correct usage (we only decrement for tasks that
+      // were previously counted when created).
       final staffRef = _firestore
           .collection(FirebaseConstants.staffCollection)
           .doc(task.assignedStaffID);
