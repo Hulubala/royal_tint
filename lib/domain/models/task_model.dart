@@ -13,6 +13,12 @@ class TaskModel {
   final String customerName;
   final String vehicleModel;
   final String packageName;
+  final String? plateNumber;
+  final String? carBrand;
+  final String? carModel;
+  final String? darkness;
+  final String mirrorSection;
+  final String packageType; // 'sv', 'gl', or 'ptn'
   final String status; 
   final String priority; 
   final DateTime dueDate;
@@ -23,6 +29,7 @@ class TaskModel {
   final Map<String, dynamic>? taskDetails;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool isFinalized;
 
   TaskModel({
     required this.taskID,
@@ -37,6 +44,12 @@ class TaskModel {
     required this.customerName,
     required this.vehicleModel,
     required this.packageName,
+    this.plateNumber,
+    this.carBrand,
+    this.carModel,
+    this.darkness,
+    required this.mirrorSection,
+    required this.packageType,
     required this.status,
     required this.priority,
     required this.dueDate,
@@ -47,6 +60,7 @@ class TaskModel {
     this.taskDetails,
     required this.createdAt,
     required this.updatedAt,
+    this.isFinalized = false,
   });
 
   // Getter for id (alias for taskID)
@@ -136,6 +150,12 @@ class TaskModel {
       customerName: data['customerName'] ?? '',
       vehicleModel: data['vehicleModel'] ?? '',
       packageName: data['packageName'] ?? '',
+      plateNumber: data['plateNumber'],
+      carBrand: data['carBrand'],
+      carModel: data['carModel'],
+      darkness: data['darkness'],
+      mirrorSection: data['mirrorSection'] ?? '',
+      packageType: data['packageType'] ?? 'sv',
       status: data['status'] ?? 'PENDING',
       priority: data['priority'] ?? 'MEDIUM',
       dueDate: (data['dueDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
@@ -148,6 +168,7 @@ class TaskModel {
       taskDetails: data['taskDetails'],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      isFinalized: data['isFinalized'] ?? false,
     );
   }
 
@@ -166,6 +187,12 @@ class TaskModel {
       customerName: data['customerName'] ?? '',
       vehicleModel: data['vehicleModel'] ?? '',
       packageName: data['packageName'] ?? '',
+      plateNumber: data['plateNumber'],
+      carBrand: data['carBrand'],
+      carModel: data['carModel'],
+      darkness: data['darkness'],
+      mirrorSection: data['mirrorSection'] ?? '',
+      packageType: data['packageType'] ?? 'sv',
       status: data['status'] ?? 'PENDING',
       priority: data['priority'] ?? 'MEDIUM',
       dueDate: data['dueDate'] is Timestamp 
@@ -192,6 +219,7 @@ class TaskModel {
       updatedAt: data['updatedAt'] is Timestamp
           ? (data['updatedAt'] as Timestamp).toDate()
           : DateTime.parse(data['updatedAt'] ?? DateTime.now().toIso8601String()),
+      isFinalized: data['isFinalized'] ?? false,
     );
   }
 
@@ -209,6 +237,12 @@ class TaskModel {
       'customerName': customerName,
       'vehicleModel': vehicleModel,
       'packageName': packageName,
+      'plateNumber': plateNumber,
+      'carBrand': carBrand,
+      'carModel': carModel,
+      'darkness': darkness,
+      'mirrorSection': mirrorSection,
+      'packageType': packageType,
       'status': status,
       'priority': priority,
       'dueDate': Timestamp.fromDate(dueDate),
@@ -219,6 +253,7 @@ class TaskModel {
       'taskDetails': taskDetails,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
+      'isFinalized': isFinalized,
     };
   }
 
@@ -237,6 +272,11 @@ class TaskModel {
       'customerName': customerName,
       'vehicleModel': vehicleModel,
       'packageName': packageName,
+      'plateNumber': plateNumber,
+      'carBrand': carBrand,
+      'carModel': carModel,
+      'darkness': darkness,
+      'mirrorSection': mirrorSection,
       'status': status,
       'priority': priority,
       'dueDate': dueDate.toIso8601String(),
@@ -247,6 +287,7 @@ class TaskModel {
       'taskDetails': taskDetails,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
+      'isFinalized': isFinalized,
     };
   }
 
@@ -264,6 +305,12 @@ class TaskModel {
     String? customerName,
     String? vehicleModel,
     String? packageName,
+    String? plateNumber,
+    String? carBrand,
+    String? carModel,
+    String? darkness,
+    String? mirrorSection,
+    String? packageType,
     String? status,
     String? priority,
     DateTime? dueDate,
@@ -274,6 +321,7 @@ class TaskModel {
     Map<String, dynamic>? taskDetails,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool? isFinalized,
   }) {
     return TaskModel(
       taskID: taskID ?? this.taskID,
@@ -288,6 +336,12 @@ class TaskModel {
       customerName: customerName ?? this.customerName,
       vehicleModel: vehicleModel ?? this.vehicleModel,
       packageName: packageName ?? this.packageName,
+      plateNumber: plateNumber ?? this.plateNumber,
+      carBrand: carBrand ?? this.carBrand,
+      carModel: carModel ?? this.carModel,
+      darkness: darkness ?? this.darkness,
+      mirrorSection: mirrorSection ?? this.mirrorSection,
+      packageType: packageType ?? this.packageType,
       status: status ?? this.status,
       priority: priority ?? this.priority,
       dueDate: dueDate ?? this.dueDate,
@@ -298,6 +352,7 @@ class TaskModel {
       taskDetails: taskDetails ?? this.taskDetails,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isFinalized: isFinalized ?? this.isFinalized,
     );
   }
 

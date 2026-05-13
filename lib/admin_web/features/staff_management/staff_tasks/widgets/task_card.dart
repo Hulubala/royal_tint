@@ -1,59 +1,78 @@
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; 
 import 'package:royal_tint/admin_web/features/staff_management/staff_tasks/models/task_item.dart';
+import 'package:royal_tint/admin_web/features/staff_management/staff_tasks/providers/staff_tasks_provider.dart';
+import 'package:royal_tint/core/constants/tint_constants.dart';
 
 class TaskCard extends StatelessWidget {
   final TaskItem task;
 
   const TaskCard({super.key, required this.task});
 
-  Color _statusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'completed':
-        return Color(0xFF4CAF50);
-      case 'confirmed':  
-      case 'in-progress':
-      case 'in progress':
-        return Colors.orange;
-      case 'pending':
-        return Color(0xFFFFC107);
+  Color _getstatusColor(String status) {
+    switch (status.toUpperCase()) {
+      case 'COMPLETED':
+        return const Color(0xFF4CAF50);
+      case 'IN_PROGRESS':
+      case 'IN-PROGRESS':
+        return const Color(0xFF2196F3);
+      case 'PENDING':
+        return const Color(0xFFFFC107);
+      case 'CANCELLED':
+        return const Color(0xFFF44336);
       default:
         return Colors.grey;
     }
   }
 
-  @override
+@override
   Widget build(BuildContext context) {
-    final sc = _statusColor(task.status);
+    final sc = _getstatusColor(task.status);
+    final isCompleted = task.status.toUpperCase() == 'COMPLETED';
+    final String cName = task.customerName ?? '';
+    final String aTitle = task.appointmentTitle ?? '';
+    final String pNum = task.plateNumber ?? '';
+    final String cBrand = task.carBrand ?? '';
+    final String cModel = task.carModel ?? '';
+    final String cInfo = task.carInfo ?? '';
+    final String pkgName = task.packageName ?? '';
+    final List<String> darknessList = (task.darkness ?? '').split(',')
+        .map((d) => d.trim())
+        .where((d) => d.isNotEmpty)
+        .toList();
 
-    final customerName = (task.customerName?.isNotEmpty ?? false)
-        ? task.customerName!
-        : (task.appointmentTitle.isNotEmpty ? task.appointmentTitle : 'Appointment');
-
-    final plate = (task.plateNumber?.isNotEmpty ?? false) ? task.plateNumber! : '';
-    final carLine = (task.carBrand != null && task.carModel != null)
-        ? '${task.carBrand} ${task.carModel}'
-        : (task.carInfo.isNotEmpty ? task.carInfo : '-');
-
-    final packageName = task.packageName ?? '';
-    final darkness = (task.darkness ?? '').trim();
-
+    final List<String> mappedDarkness = [];
+    for (int i = 0; i < task.mirrorSections.length; i++) {
+      final sectionLabel = task.mirrorSections[i];
+      final sectionKey = TintSections.keyByLabel[sectionLabel] ?? sectionLabel.toLowerCase();
+      final rawVal = i < darknessList.length ? darknessList[i] : '';
+      
+      if (rawVal.isNotEmpty) {
+        mappedDarkness.add(mapVLTtoCode(rawVal, task.packageName ?? '', sectionKey: sectionKey));
+      }
+    }
+    final customerName = cName.isNotEmpty 
+        ? cName 
+        : (aTitle.isNotEmpty ? aTitle : 'Appointment');
+    final carLine = (cBrand.isNotEmpty && cModel.isNotEmpty)
+        ? '$cBrand $cModel'
+        : (cInfo.isNotEmpty ? cInfo : '-');
     final carInfoLine = [
-      if (packageName.isNotEmpty) packageName,
-      if (plate.isNotEmpty) plate,
-      if (carLine.isNotEmpty) carLine,
+      if (pkgName.isNotEmpty) pkgName,
+      if (pNum.isNotEmpty) pNum,
+      if (carLine != '-' && carLine.isNotEmpty) carLine,
     ].join(' • ');
 
-    final sectionLine = darkness.isEmpty
-        ? 'Section: ${task.mirrorSection}'
-        : 'Section: ${task.mirrorSection} • Darkness: $darkness';
-    
+    final sectionsDisplay = 'Section: ${task.mirrorSections.join(", ")}';
+    final darknessDisplay = 'Darkness: ${mappedDarkness.isEmpty ? "-" : mappedDarkness.join(", ")}';
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color(0xFF0F0F0F),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Color(0xFFFFC107), width: 1.5),
+        border: Border.all(color: const Color(0xFFFFC107).withOpacity(0.5), width: 1.5),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,7 +106,13 @@ class TaskCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                sectionLine,
+                  sectionsDisplay,
+                  style: TextStyle(color: Colors.grey[400], fontSize: 13),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  darknessDisplay,
                   style: TextStyle(color: Colors.grey[400], fontSize: 13),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -110,6 +135,7 @@ class TaskCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 10),
+
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
@@ -126,7 +152,84 @@ class TaskCard extends StatelessWidget {
                   ),
                 ),
               ),
+              
+              const SizedBox(height: 12),
+
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (!isCompleted)
+                    IconButton(
+                      onPressed: () => _handleComplete(context),
+                      icon: const Icon(BootstrapIcons.check_circle_fill, color: Colors.green, size: 20),
+                      tooltip: 'Mark as Completed',
+                    ),
+                  
+                  IconButton(
+                    onPressed: () => _handleDelete(context),
+                    icon: const Icon(BootstrapIcons.trash3_fill, color: Color(0xFFF44336), size: 20),
+                    tooltip: 'Remove Task',
+                  ),
+                ],
+              ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleComplete(BuildContext context) {
+    if (task.id.isEmpty || task.staffID.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: Missing Task or Staff ID')),
+      );
+      return;
+    }
+    context.read<StaffTasksProvider>().completeTask(
+      task.id,
+      task.staffID,
+      task.appointmentID,
+    );
+  }
+
+  void _handleDelete(BuildContext context) {
+    if (task.id.isEmpty || task.staffID.isEmpty) {
+       ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: Missing Task or Staff ID')),
+      );
+      return;
+    }
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A1A),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: const Color(0xFFFFD700).withOpacity(0.15)),
+        ),
+        title: const Text('Delete Task', style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold)),
+        content: const Text(
+          'Are you sure?\n\n• Staff workload will be decremented.\n• Appointment will revert to Confirmed so it can be reassigned.',
+          style: TextStyle(color: Colors.grey, height: 1.6),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red[700],
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: () {
+              context.read<StaffTasksProvider>().deleteTask(
+                task.id,
+                task.staffID,
+                task.appointmentID,
+              );
+              Navigator.pop(context);
+            }, 
+            child: const Text('Delete', style: TextStyle(fontWeight: FontWeight.bold))
           ),
         ],
       ),

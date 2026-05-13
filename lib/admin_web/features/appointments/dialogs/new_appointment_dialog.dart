@@ -9,6 +9,7 @@ import 'package:royal_tint/data/services/appointment_service.dart';
 import 'package:royal_tint/data/services/package_service.dart';
 import 'package:royal_tint/domain/models/tint_package_model.dart';
 import 'package:royal_tint/admin_web/features/appointments/dialogs/thirty_minute_time_picker.dart';
+import 'package:royal_tint/admin_web/features/appointments/widgets/appointment_form_widgets.dart';
 
 // NEW APPOINTMENT DIALOG
 class NewAppointmentDialog extends StatefulWidget {
@@ -48,10 +49,10 @@ class _NewAppointmentDialogState extends State<NewAppointmentDialog> {
   double _calculatedPrice = 0.0;
 
   Map<String, String> _tintSelections = {
-    'frontWindshield': '',
-    'rearWindshield': '',
-    'leftSide': '',
-    'rightSide': '',
+    'frontWindScreen': '',
+    'frontSideWindows': '',
+    'rearPassenger': '',
+    'rearWindscreen': '',
   };
 
   bool _isTintSelectionValid() {
@@ -92,6 +93,7 @@ class _NewAppointmentDialogState extends State<NewAppointmentDialog> {
         if (_packages.isNotEmpty) {
           _selectedPackage = _packages.first;
           _updatePrice();
+          _tintSelections = defaultTintSelectionsForPackage(_selectedPackage!.packageName);
         }
       });
     } catch (e) {
@@ -111,15 +113,7 @@ class _NewAppointmentDialogState extends State<NewAppointmentDialog> {
       setState(() {
         _selectedPackage = package;
         _updatePrice();
-
-        final opts = package.darknessOptions;
-        final def = opts.isNotEmpty ? opts.first : '';
-        _tintSelections = {
-          'frontWindshield': def,
-          'rearWindshield': def,
-          'leftSide': def,
-          'rightSide': def,
-        };
+        _tintSelections = defaultTintSelectionsForPackage(package.packageName);
       });
     }
   }
@@ -488,37 +482,12 @@ class _NewAppointmentDialogState extends State<NewAppointmentDialog> {
   }
 
   Widget _buildTypeOption(String value, String label, IconData icon) {
-    final isSelected = _appointmentType == value;
-    return InkWell(
+    return AppointmentTypeOption(
+      value: value,
+      label: label,
+      icon: icon,
+      isSelected: _appointmentType == value,
       onTap: () => setState(() => _appointmentType = value),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: isSelected
-              ? const LinearGradient(
-                  colors: [Color(0xFFFFD700), Color(0xFFFFC700)])
-              : null,
-          color: isSelected ? null : Colors.black,
-          border: Border.all(
-              color: isSelected
-                  ? const Color(0xFFFFD700)
-                  : const Color(0xFFFFD700).withOpacity(0.3),
-              width: 2),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          children: [
-            Icon(icon,
-                color: isSelected ? Colors.black : const Color(0xFFFFD700),
-                size: 32),
-            const SizedBox(height: 8),
-            Text(label,
-                style: TextStyle(
-                    color: isSelected ? Colors.black : const Color(0xFFFFD700),
-                    fontWeight: FontWeight.bold)),
-          ],
-        ),
-      ),
     );
   }
 
@@ -531,49 +500,17 @@ class _NewAppointmentDialogState extends State<NewAppointmentDialog> {
       String? Function(String?)? validator,
       {TextInputType? keyboardType,
       int maxLines = 1}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: const TextStyle(
-                color: Color(0xFFFFD700),
-                fontWeight: FontWeight.bold,
-                fontSize: 14)),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          inputFormatters: formatters,
-          validator: validator,
-          maxLines: maxLines,
-          enabled: !_isSaving,
-          onChanged: (_) => setState(() {}),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle:
-                TextStyle(color: const Color(0xFFFFD700).withOpacity(0.4)),
-            prefixIcon: Icon(icon, color: const Color(0xFFFFD700)),
-            filled: true,
-            fillColor: Colors.black,
-            border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide:
-                    const BorderSide(color: Color(0xFFFFD700), width: 2)),
-            enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide:
-                    const BorderSide(color: Color(0xFFFFD700), width: 2)),
-            focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide:
-                    const BorderSide(color: Color(0xFFFFC700), width: 2)),
-            errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Colors.red, width: 2)),
-          ),
-          style: const TextStyle(color: Color(0xFFFFD700)),
-        ),
-      ],
+    return AppointmentTextField(
+      controller,
+      label,
+      icon,
+      hint,
+      formatters,
+      validator,
+      keyboardType: keyboardType,
+      maxLines: maxLines,
+      enabled: !_isSaving,
+      onChanged: (_) => setState(() {}),
     );
   }
 
@@ -657,70 +594,89 @@ class _NewAppointmentDialogState extends State<NewAppointmentDialog> {
     );
   }
 
-  Widget _buildTintSelections() {
-    final options = kPackageDarknessFallback[_selectedPackage?.packageName ?? ''] ?? [];
+ Widget _buildTintSelections() {
+  final packageName = _selectedPackage?.packageName ?? '';
 
-    // If no options are available, show an error message
-    if (options.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.red, width: 2),
-        ),
-        child: const Text(
-          'No darkness options available for the selected package. Please update your package.',
-          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-        ),
-      );
-    }
+  MenuDropdown<String> tintDropdown(String label, String key) {
+    final allowed = allowedCodesFor(packageName: packageName, sectionKey: key);
 
-    print('Package Name: ${_selectedPackage?.packageName}');
-    print('Darkness Options: $options');
+    final current = normalizeTintSelection(
+      selection: _tintSelections[key] ?? '',
+      allowedCodes: allowed,
+    );
 
-    // Helper for building dropdowns for each tint section
-    MenuDropdown<String> tintDropdown(String label, String key) {
-      return MenuDropdown<String>(
-        label: label,
-        icon: BootstrapIcons.droplet_half,
-        value: _tintSelections[key] != null ? mapVLTtoCode(_tintSelections[key]!, _selectedPackage?.packageName ?? '') : null,
-        hint: 'Select darkness',
-        items: options.map((code) {
-          return MenuItem<String>(
-            value: code, 
-            label: code,
-          );
-        }).toList(),
-        onChanged: (value) {
-          if (value == null) return;
-          setState(() {
-            _tintSelections[key] = mapSVtoVLT(value); 
-          });
-        },
-      );
-    }
-
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(child: tintDropdown('Front Windshield', 'frontWindshield')),
-            const SizedBox(width: 12),
-            Expanded(child: tintDropdown('Rear Windshield', 'rearWindshield')),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(child: tintDropdown('Left Side', 'leftSide')),
-            const SizedBox(width: 12),
-            Expanded(child: tintDropdown('Right Side', 'rightSide')),
-          ],
-        ),
-      ],
+    return MenuDropdown<String>(
+      label: label,
+      icon: BootstrapIcons.droplet_half,
+      value: current.isEmpty ? null : current,
+      hint: allowed.isEmpty ? 'No options' : 'Select darkness',
+      enabled: allowed.isNotEmpty,
+      items: allowed
+          .map((code) => MenuItem<String>(value: code, label: code))
+          .toList(),
+      onChanged: (value) {
+        if (value == null) return;
+        setState(() {
+          // Store as VLT (your existing system expects VLT in Firestore)
+          _tintSelections[key] = mapSVtoVLT(value);
+        });
+      },
     );
   }
+
+  if (packageName.isEmpty) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.red, width: 2),
+      ),
+      child: const Text(
+        'Please select a package first.',
+        style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  final anyAllowed = TintSections.all.any((k) =>
+      allowedCodesFor(packageName: packageName, sectionKey: k).isNotEmpty);
+
+  if (!anyAllowed) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.red, width: 2),
+      ),
+      child: Text(
+        'No darkness options available for $packageName. Please update your package settings.',
+        style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+
+  return Column(
+    children: [
+      Row(
+        children: [
+          Expanded(child: tintDropdown('Front Windscreen', TintSections.frontWindScreen)),
+          const SizedBox(width: 12),
+          Expanded(child: tintDropdown('Front Side Windows', TintSections.frontSideWindows)),
+        ],
+      ),
+      const SizedBox(height: 12),
+      Row(
+        children: [
+          Expanded(child: tintDropdown('Rear Passenger', TintSections.rearPassenger)),
+          const SizedBox(width: 12),
+          Expanded(child: tintDropdown('Rear Windscreen', TintSections.rearWindscreen)),
+        ],
+      ),
+    ],
+  );
+}
 
   Widget _buildDetectedInfo() {
     return Container(
@@ -762,29 +718,7 @@ class _NewAppointmentDialogState extends State<NewAppointmentDialog> {
   }
 
   Widget _buildInfoChip(String label, String value, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFFFD700))),
-      child: Column(
-        children: [
-          Icon(icon, color: const Color(0xFFFFD700), size: 20),
-          const SizedBox(height: 4),
-          Text(label,
-              style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600)),
-          Text(value,
-              style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
+    return AppointmentInfoChip(label: label, value: value, icon: icon);
   }
 
   Widget _buildDatePicker() {
@@ -910,13 +844,15 @@ class _NewAppointmentDialogState extends State<NewAppointmentDialog> {
 
                   // Determine minimum time based on appointment type and date
                   TimeOfDay minTime;
+                  final nowMinutes = now.hour * 60 + now.minute;
+                  final openingMinutes = openingTime.hour * 60 + openingTime.minute;
+
                   if (_appointmentType == 'walk-in') {
-                    minTime = now;
+                    // For walk-in, earliest is now or opening time
+                    minTime = nowMinutes > openingMinutes ? now : openingTime;
                   } else {
+                    // For scheduled
                     if (isToday) {
-                      final nowMinutes = now.hour * 60 + now.minute;
-                      final openingMinutes =
-                          openingTime.hour * 60 + openingTime.minute;
                       minTime = nowMinutes > openingMinutes ? now : openingTime;
                     } else {
                       minTime = openingTime;

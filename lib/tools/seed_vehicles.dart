@@ -52,7 +52,7 @@ class VehicleSeeder {
         opCount++;
       }
 
-      final modelId = '${brandKey}__${modelKey}';
+      final modelId = '${brandKey}__$modelKey';
       final modelRef = firestore.collection('vehicle_models').doc(modelId);
 
       batch.set(

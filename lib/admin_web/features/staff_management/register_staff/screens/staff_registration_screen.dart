@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:royal_tint/admin_web/features/staff_management/register_staff/controllers/staff_registration_controller.dart';
 import 'package:royal_tint/admin_web/features/staff_management/register_staff/dialogs/staff_registration_success_dialog.dart';
@@ -56,6 +57,9 @@ class _StaffRegistrationScreenState extends State<StaffRegistrationScreen> {
           onOk: () {
             Navigator.of(context).pop();
             _clearForm();
+          },
+          onReauth: () {
+            if (mounted) context.go('/manager/login');
           },
         ),
       );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class HoverableCard extends StatefulWidget {
-  const HoverableCard({required this.child});
+  const HoverableCard({super.key, required this.child});
   final Widget child;
 
   @override

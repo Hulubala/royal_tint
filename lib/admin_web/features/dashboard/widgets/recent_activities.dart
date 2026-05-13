@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:royal_tint/admin_web/features/dashboard/providers/manager_provider.dart';
 import 'package:royal_tint/admin_web/features/dashboard/widgets/relative_time.dart';
 import 'package:royal_tint/admin_web/features/dashboard/widgets/section_container.dart';
+import 'package:royal_tint/domain/models/task_model.dart';
 
 class RecentActivities extends StatelessWidget {
   const RecentActivities({super.key, required this.managerProvider});
@@ -10,20 +11,54 @@ class RecentActivities extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Build a small activity list derived from appointments
-    final apts = managerProvider.appointments;
-    final activities = apts.take(4).map((apt) {
-      // IMPORTANT: apt.appointmentDate type depends on your model.
-      // If your model has `DateTime appointmentDate`, this works.
-      // If it’s Timestamp, convert in model first.
-      final DateTime? dt = (apt.appointmentDate is DateTime) ? apt.appointmentDate as DateTime : null;
+    final rawTasks = managerProvider.tasks;
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+    
+    final activities = rawTasks.where((t) {
+      if (t is! TaskModel) return false;
+      
+      final s = t.status.toUpperCase();
+      final isFinalized = t.isFinalized;
+      
+      // Filter by today only
+      final updatedAt = t.updatedAt;
+      if (updatedAt.isBefore(todayStart)) return false;
+
+      // Show staff activity: when they start (IN_PROGRESS), complete (COMPLETED), or when finalized
+      return s == 'IN_PROGRESS' || s == 'IN-PROGRESS' || s == 'COMPLETED' || isFinalized;
+    }).take(8).map((t) {
+      final task = t as TaskModel;
+      final s = task.status.toUpperCase();
+      final isFinalized = task.isFinalized;
+      
+      IconData icon = BootstrapIcons.play_circle_fill;
+      List<Color> gradient = const [Color(0xFF2196F3), Color(0xFF1976D2)]; // Blue for start
+      String action = 'accepted';
+      
+      if (isFinalized) {
+        icon = BootstrapIcons.award_fill;
+        gradient = const [Color(0xFFFFD700), Color(0xFFB8860B)]; // Gold for finalized
+        action = 'finalized';
+      } else if (s == 'COMPLETED') {
+        icon = BootstrapIcons.check2_circle;
+        gradient = const [Color(0xFF4CAF50), Color(0xFF388E3C)]; // Green for completed
+        action = 'completed';
+      } else if (s == 'CANCELLED') {
+        icon = BootstrapIcons.x_circle_fill;
+        gradient = const [Color(0xFFF44336), Color(0xFFD32F2F)]; // Red for rejected
+        action = 'rejected';
+      }
+
+      String title = '${task.assignedStaffName} has $action ${task.carBrand} ${task.carModel} task';
+      if (isFinalized) title = 'Task finalized by Manager';
 
       return _Activity(
-        icon: BootstrapIcons.calendar_check_fill,
-        iconGradient: const [Color(0xFF2196F3), Color(0xFF1976D2)],
-        title: '${apt.customerName} booked an appointment',
-        subtitle: '${apt.packageName} • ${apt.vehicleDisplay}',
-        time: formatRelativeTime(apt.createdAt),
+        icon: icon,
+        iconGradient: gradient,
+        title: title,
+        subtitle: '${task.plateNumber} • ${task.packageName} • ${task.mirrorSection}',
+        time: formatRelativeTime(task.updatedAt),
       );
     }).toList();
 
@@ -102,7 +137,7 @@ class _Body extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       activity.subtitle,
-                      style: const TextStyle(color: Color(0xFFE0E0E0), fontSize: 11),
+                      style: const TextStyle(color: Colors.grey, fontSize: 11),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

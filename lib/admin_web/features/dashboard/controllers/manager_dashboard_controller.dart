@@ -4,19 +4,23 @@ import 'package:royal_tint/admin_web/features/dashboard/providers/manager_provid
 import 'package:royal_tint/admin_web/features/dashboard/services/manager_dashboard_stats_service.dart';
 import 'package:royal_tint/admin_web/features/dashboard/services/staff_query_service.dart';
 import 'package:royal_tint/admin_web/features/dashboard/utils/date_utils.dart';
+import 'package:royal_tint/data/repositories/task_repository.dart';
 
 class ManagerDashboardController {
   ManagerDashboardController({
     AppointmentService? appointmentService,
     ManagerDashboardStatsService? statsService,
     StaffQueryService? staffQueryService,
+    TaskRepository? taskRepository,
   })  : _appointmentService = appointmentService ?? AppointmentService(),
         _statsService = statsService ?? ManagerDashboardStatsService(),
-        _staffQueryService = staffQueryService ?? StaffQueryService();
+        _staffQueryService = staffQueryService ?? StaffQueryService(),
+        _taskRepository = taskRepository ?? TaskRepository();
 
   final AppointmentService _appointmentService;
   final ManagerDashboardStatsService _statsService;
   final StaffQueryService _staffQueryService;
+  final TaskRepository _taskRepository;
 
   Future<void> init(ManagerProvider provider, String branchID) async {
     provider.setBranch(branchID);
@@ -46,17 +50,22 @@ class ManagerDashboardController {
 
       provider.setAppointments(todayList);
 
+      final tasks = await _taskRepository.getTasksByBranch(branchID);
+      provider.setTasks(tasks);
+
       final todayTotalCount = await _statsService.getTodayAppointmentsCount(
         branchID: branchID,
       );
 
       final monthlyRevenue = await _statsService.getMonthlyRevenue(branchID: branchID);
       final activeStaff = await _statsService.getActiveStaffCount(branchID: branchID);
+      final pendingTasks = await _statsService.getPendingTasksCount(branchID: branchID);
 
       provider.setStats(
         todayAppointments: todayTotalCount,
         monthlyRevenue: monthlyRevenue,
         activeStaff: activeStaff,
+        pendingTasks: pendingTasks,
       );
 
       provider.setLoading(false);

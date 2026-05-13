@@ -43,8 +43,14 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+*.apk
+*.aab
+*.so
 
 # Firebase service account keys (DO NOT COMMIT)
 tools/vehicle_import/serviceAccount.json
 tools/vehicle_import/*.key.json
 node_modules
+
+# Firebase Service Account Key
+*.json

@@ -8,6 +8,7 @@ class StaffRegistrationSuccessDialog extends StatelessWidget {
   final String password;
   final bool requiresReauth;
   final VoidCallback onOk;
+  final VoidCallback? onReauth;
 
   const StaffRegistrationSuccessDialog({
     super.key,
@@ -16,6 +17,7 @@ class StaffRegistrationSuccessDialog extends StatelessWidget {
     required this.password,
     required this.requiresReauth,
     required this.onOk,
+    this.onReauth,
   });
 
   @override
@@ -27,7 +29,7 @@ class StaffRegistrationSuccessDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFD700).withOpacity(0.2),
+              color: const Color(0xFFFFD700).withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -66,7 +68,26 @@ class StaffRegistrationSuccessDialog extends StatelessWidget {
         ],
       ),
       actions: [
-        TextButton(onPressed: onOk, child: const Text('OK')),
+        if (!requiresReauth)
+          TextButton(onPressed: onOk, child: const Text('OK'))
+        else ...[
+          TextButton(
+            onPressed: onOk,
+            child: const Text('Dismiss'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.of(context).pop();
+              onReauth?.call();
+            },
+            icon: const Icon(Icons.login, size: 16),
+            label: const Text('Log Back In'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFFD700),
+              foregroundColor: Colors.black,
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -75,9 +96,9 @@ class StaffRegistrationSuccessDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.green.withOpacity(0.1),
+        color: Colors.green.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.green.withOpacity(0.3)),
+        border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -98,9 +119,9 @@ class StaffRegistrationSuccessDialog extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.orange.withOpacity(0.1),
+        color: Colors.orange.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

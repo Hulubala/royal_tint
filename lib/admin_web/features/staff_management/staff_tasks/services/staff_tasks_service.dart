@@ -1,49 +1,60 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:royal_tint/core/constants/tint_constants.dart';
+import 'package:royal_tint/data/repositories/task_repository.dart';
+import 'package:royal_tint/domain/models/task_model.dart';
 import 'package:royal_tint/admin_web/features/staff_management/staff_tasks/models/staff_member.dart';
 import 'package:royal_tint/admin_web/features/staff_management/staff_tasks/models/appointment_item.dart';
 import 'package:royal_tint/admin_web/features/staff_management/staff_tasks/models/task_item.dart';
 
 class StaffTasksService {
   final FirebaseFirestore _db;
+  final TaskRepository _taskRepository; 
 
-  StaffTasksService({FirebaseFirestore? db}) : _db = db ?? FirebaseFirestore.instance;
+  StaffTasksService({FirebaseFirestore? db, TaskRepository? taskRepository}) 
+    : _db = db ?? FirebaseFirestore.instance,
+     _taskRepository = taskRepository ?? TaskRepository();
 
-  Future<List<StaffMember>> fetchActiveStaff(String branchID) async {
-    final q = await _db
+  Stream<List<StaffMember>> streamActiveStaff(String branchID) {
+    return _db
         .collection('staff')
         .where('branchID', isEqualTo: branchID)
         .where('isActive', isEqualTo: true)
-        .get();
-
-    final list = q.docs.map((d) => StaffMember.fromMap(d.id, d.data())).toList();
-
-    // optional: sort available first then by task count
-    list.sort((a, b) {
-      final av = (b.isAvailable ? 1 : 0) - (a.isAvailable ? 1 : 0);
-      if (av != 0) return av;
-      return a.currentTaskCount.compareTo(b.currentTaskCount);
+        .snapshots()
+        .map((snapshot) {
+      final list = snapshot.docs.map((d) => StaffMember.fromMap(d.id, d.data())).toList();
+      
+      list.sort((a, b) {
+        final av = (b.isAvailable ? 1 : 0) - (a.isAvailable ? 1 : 0);
+        if (av != 0) return av;
+        return a.currentTaskCount.compareTo(b.currentTaskCount);
+      });
+      return list;
     });
+  }
 
-    return list;
+  Future<void> decreaseStaffTaskCount(String staffID) async {
+    await FirebaseFirestore.instance
+        .collection('staff')
+        .doc(staffID)
+        .update({
+      'currentTaskCount': FieldValue.increment(-1), 
+    });
   }
 
   Future<List<AppointmentItem>> fetchAssignableAppointments(String branchID) async {
-    final q = await _db
+    final snap = await _db
         .collection('appointments')
         .where('branchID', isEqualTo: branchID)
+        .orderBy('appointmentDate')
         .get();
 
-    final list = q.docs
+    final list = snap.docs
         .map((d) => AppointmentItem.fromMap(d.id, d.data()))
         .toList();
 
     final filtered = list.where((a) {
-      final s = a.status.toLowerCase();
-      final okStatus =
-          s == 'pending' || s == 'confirmed' || s == 'in-progress';
-
-      return okStatus;
+      final s = a.status.toUpperCase();
+      // Allow assignment for CONFIRMED or already IN_PROGRESS appointments 
+      return s == 'CONFIRMED' || s == 'IN_PROGRESS' || s == 'IN-PROGRESS';
     }).toList();
 
     filtered.sort((a, b) =>
@@ -63,11 +74,15 @@ class StaffTasksService {
 
     for (final d in q.docs) {
       final data = d.data();
-      final section = (data['mirrorSection'] ?? '').toString().trim();
+      final String sectionsRaw = (data['mirrorSection'] ?? '').toString().trim();
       final status = (data['status'] ?? '').toString().trim().toLowerCase();
 
-      if (section.isNotEmpty && status != 'approved') {
-        set.add(section);
+      // Only count sections from tasks that are NOT cancelled
+      if (sectionsRaw.isNotEmpty && status != 'cancelled') {
+        final List<String> sections = sectionsRaw.split(',').map((s) => s.trim()).toList();
+        for (var s in sections) {
+          if (s.isNotEmpty) set.add(s);
+        }
       }
     }
 
@@ -75,27 +90,39 @@ class StaffTasksService {
   }
 
   Stream<List<TaskItem>> streamActiveTasks(String branchID) {
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final tomorrowStart = todayStart.add(const Duration(days: 1));
+    
     return _db
         .collection('tasks')
         .where('branchID', isEqualTo: branchID)
         .snapshots()
-        .map((snap) => snap.docs.map((d) => TaskItem.fromMap(d.id, d.data())).toList())
-        .map((tasks) {
-          // filter statuses in Dart
-          final filtered = tasks.where((t) {
-            final s = t.status.toLowerCase();
-            return s == 'pending' || s == 'confirmed' || s == 'in-progress';
-          }).toList();
+        .map((snap) {
+      
+      final allTasks = snap.docs.map((d) => TaskItem.fromMap(d.id, d.data())).toList();
 
-          // sort newest first in Dart (createdAt may be null)
-          filtered.sort((a, b) {
-            final at = a.createdAt?.millisecondsSinceEpoch ?? 0;
-            final bt = b.createdAt?.millisecondsSinceEpoch ?? 0;
-            return bt.compareTo(at);
-          });
+      final filtered = allTasks.where((t) {
+        final s = t.status.toUpperCase();
+        final DateTime taskDate = t.createdAt ?? DateTime.now();
 
-          return filtered;
+        bool isFromToday = taskDate.isAfter(todayStart) && taskDate.isBefore(tomorrowStart);
+        bool isActive = (s == 'PENDING' || s == 'IN_PROGRESS' || s == 'IN-PROGRESS');
+
+        return isFromToday || isActive;
+      }).toList();
+
+      filtered.sort((a, b) {
+        if (a.status != 'COMPLETED' && b.status == 'COMPLETED') return -1;
+        if (a.status == 'COMPLETED' && b.status != 'COMPLETED') return 1;
+       
+        final at = a.createdAt?.millisecondsSinceEpoch ?? 0;
+          final bt = b.createdAt?.millisecondsSinceEpoch ?? 0;
+          return bt.compareTo(at);
         });
+
+      return filtered;
+    });
   }
 
   Future<void> assignTask({
@@ -106,65 +133,126 @@ class StaffTasksService {
     required String darknessCode,
     required String createdByManagerUid,
   }) async {
-    final taskRef = _db.collection('tasks').doc();
-    final apptRef = _db.collection('appointments').doc(appt.id);
-    final staffRef = _db.collection('staff').doc(staff.id);
 
-    final batch = _db.batch();
+    final now = DateTime.now();
 
-    final existing = await _db
-        .collection('tasks')
-        .where('appointmentID', isEqualTo: appt.id)
-        .where('mirrorSection', isEqualTo: mirrorSection)
-        .get();
+    final task = TaskModel(
+      taskID: '',
+      branchID: branchID,
+      title: '${appt.customerName} - $mirrorSection',
+      description: 'Tint ${appt.brand} ${appt.model}',
+      assignedStaffID: staff.id,
+      assignedStaffName: staff.name,
+      appointmentID: appt.id,
+      customerName: appt.customerName,
+      vehicleModel: '${appt.brand} ${appt.model}',
+      packageName: appt.packageName,
+      plateNumber: appt.plateNumber,
+      carBrand: appt.brand,
+      carModel: appt.model,
+      mirrorSection: mirrorSection,
+      darkness: darknessCode,
+      packageType: appt.packageType,
+      status: TaskStatus.pending,
+      priority: TaskPriority.medium,
+      dueDate: now.add(const Duration(hours: 2)),
+      createdAt: now,
+      updatedAt: now,
+    );
 
-    final sectionKey = _sectionKeyFromLabel(mirrorSection);
-    final darkness = sectionKey.isEmpty ? '' : mapVLTtoCode(appt.tintSelections[sectionKey] ?? '', appt.packageType);
+    await _taskRepository.createTask(task);
 
-    batch.set(taskRef, {
-      'branchID': branchID,
-      'staffID': staff.id,
-      'staffName': staff.name,
-      'appointmentID': appt.id,
-      'customerName': appt.customerName,
-      'plateNumber': appt.plateNumber,
-      'packageName': appt.packageName,
-      'carBrand': appt.brand,
-      'carModel': appt.model,
-      'mirrorSection': mirrorSection,
-      'darkness': darkness,
-      'status': 'pending',
-      'createdAt': FieldValue.serverTimestamp(),
-      'createdBy': createdByManagerUid,
-    });
-
-    // store assigned staff id in appointment
-    batch.update(apptRef, {
+    await _db.collection('appointments').doc(appt.id).update({
       'assignedStaffID': staff.id,
       'updatedAt': FieldValue.serverTimestamp(),
     });
+  }
 
-    // increment staff task count
-    batch.update(staffRef, {
-      'currentTaskCount': FieldValue.increment(1),
+  Future<void> completeTask(String taskID, String staffID, String appointmentID) async {
+    final batch = _db.batch();
+
+    // Mark task completed with timestamp
+    final taskRef = _db.collection('tasks').doc(taskID);
+    batch.update(taskRef, {
+      'status': 'COMPLETED',
+      'completedAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
+
+    // Decrement staff workload
+    final staffRef = _db.collection('staff').doc(staffID);
+    batch.update(staffRef, {
+      'currentTaskCount': FieldValue.increment(-1),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    // NOTE: Appointment status is NOT updated here. 
+    // It will be updated by the manager via finalizeAppointment() 
+    // after all tasks for this appointment are done.
 
     await batch.commit();
   }
 
-  String _sectionKeyFromLabel(String label) {
-    switch (label.trim().toLowerCase()) {
-      case 'front windshield':
-        return 'frontWindshield';
-      case 'rear windshield':
-        return 'rearWindshield';
-      case 'left side':
-        return 'leftSide';
-      case 'right side':
-        return 'rightSide';
-      default:
-        return '';
+  Future<void> finalizeAppointment(String appointmentID) async {
+    final batch = _db.batch();
+
+    // 1. Update appointment
+    batch.update(_db.collection('appointments').doc(appointmentID), {
+      'status': 'completed',
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    // 2. Mark all tasks for this appointment as isFinalized = true and status = COMPLETED
+    final tasksSnap = await _db.collection('tasks').where('appointmentID', isEqualTo: appointmentID).get();
+    for (var doc in tasksSnap.docs) {
+      batch.update(doc.reference, {
+        'status': 'COMPLETED',
+        'isFinalized': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
     }
+
+    await batch.commit();
+  }
+
+  Future<void> deleteTask(String taskID, String staffID, String appointmentID) async {
+    final batch = _db.batch();
+
+    // Remove the task document
+    final taskRef = _db.collection('tasks').doc(taskID);
+    batch.delete(taskRef);
+
+    // Decrement staff workload
+    final staffRef = _db.collection('staff').doc(staffID);
+    batch.update(staffRef, {
+      'currentTaskCount': FieldValue.increment(-1),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    // Check if there are other tasks for this appointment
+    final otherTasks = await _db
+        .collection('tasks')
+        .where('appointmentID', isEqualTo: appointmentID)
+        .get();
+    
+    // Only revert appointment to CONFIRMED if NO other tasks exist
+    // If other tasks exist, it remains in its current state (assigned/in-progress)
+    if (otherTasks.docs.length <= 1) { 
+      // <= 1 because the current task is still in the collection until batch commit, 
+      // but 'delete' is queued. Actually, better check if any REMAINING tasks.
+      // Wait, since we are in a Future, we can check the count.
+      final remainingTasks = otherTasks.docs.where((d) => d.id != taskID).toList();
+      
+      if (remainingTasks.isEmpty) {
+        final apptRef = _db.collection('appointments').doc(appointmentID);
+        batch.update(apptRef, {
+          'status': 'confirmed',
+          'assignedStaffID': null,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+    }
+
+    await batch.commit();
   }
 }

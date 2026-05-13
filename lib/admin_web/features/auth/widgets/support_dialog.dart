@@ -26,7 +26,7 @@ class SupportDialog extends StatelessWidget {
               ),
               SizedBox(height: 12),
               Text(
-                'Email: support@royaltint.com\nPhone: +60123456789\nHours: 9am-6pm (Mon-Sat)',
+                'Email: support@royaltint.com\nPhone: 0162059690\nHours: 9am-7pm (Mon-Sat)',
                 style: TextStyle(color: AppColors.grey300, height: 1.4),
                 textAlign: TextAlign.center,
               ),

@@ -53,9 +53,10 @@ class AppointmentCard extends StatelessWidget {
 
     final vehicleDisplay = '${appointment.vehicleBrand} ${appointment.vehicleModel}';
 
-    final isInProgress = appointment.status.toLowerCase() == 'in-progress';
-    final isCompleted = appointment.status.toLowerCase() == 'completed';
-    final isCancelled = appointment.status.toLowerCase() == 'cancelled';
+    final String s = appointment.status.toUpperCase();
+    final isInProgress = s == 'IN_PROGRESS' || s == 'IN-PROGRESS';
+    final isCompleted = s == 'COMPLETED';
+    final isCancelled = s == 'CANCELLED';
 
     final typeColor =
         appointmentType == 'walk-in' ? const Color(0xFF9C27B0) : const Color(0xFF00BCD4);

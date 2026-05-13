@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:royal_tint/admin_web/features/staff_management/staff_tasks/models/task_item.dart';
 import 'package:royal_tint/admin_web/features/staff_management/staff_tasks/providers/staff_tasks_provider.dart';
 import 'package:royal_tint/admin_web/features/staff_management/staff_tasks/widgets/staff_tasks_panel_decoration.dart';
-import 'package:royal_tint/admin_web/features/staff_management/staff_tasks/widgets/task_card.dart';
+import 'package:royal_tint/admin_web/features/staff_management/staff_tasks/widgets/consolidated_task_card.dart';
 
 class ActiveTasksPanel extends StatelessWidget {
   const ActiveTasksPanel({super.key});
@@ -54,12 +54,21 @@ class ActiveTasksPanel extends StatelessWidget {
                   );
                 }
 
-                // Render a list of TaskCards
+                // 📦 GROUP TASKS BY APPOINTMENT ID
+                final Map<String, List<TaskItem>> grouped = {};
+                for (var t in tasks) {
+                  grouped.putIfAbsent(t.appointmentID, () => []).add(t);
+                }
+
+                // Render a list of ConsolidatedTaskCards
                 return Column(
-                  children: tasks.map((task) {
+                  children: grouped.entries.map((entry) {
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: TaskCard(task: task), // Fix: Ensure TaskItem is passed here
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: ConsolidatedTaskCard(
+                        appointmentID: entry.key,
+                        tasks: entry.value,
+                      ),
                     );
                   }).toList(),
                 );

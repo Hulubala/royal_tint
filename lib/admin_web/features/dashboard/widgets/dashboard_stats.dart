@@ -29,7 +29,7 @@ class DashboardStats extends StatelessWidget {
                     child: _StatBox(
                       icon: BootstrapIcons.clock_history,
                       value: '${managerProvider.pendingTasks}',
-                      label: 'Pending Tasks',
+                      label: 'Pending Confirmation',
                       badge: 'Pending',
                       gradientColors: [const Color(0xFFFFC107), const Color(0xFFFF9800)],
                     ),
@@ -78,7 +78,7 @@ class DashboardStats extends StatelessWidget {
                         child: _StatBox(
                           icon: BootstrapIcons.clock_history,
                           value: '${managerProvider.pendingTasks}',
-                          label: 'Pending Tasks',
+                          label: 'Pending Confirmation',
                           badge: 'Pending',
                           gradientColors: [const Color(0xFFFFC107), const Color(0xFFFF9800)],
                         ),
@@ -134,7 +134,7 @@ class DashboardStats extends StatelessWidget {
                   child: _StatBox(
                     icon: BootstrapIcons.clock_history,
                     value: '${managerProvider.pendingTasks}',
-                    label: 'Pending Tasks',
+                    label: 'Pending Confirmation',
                     badge: 'Pending',
                     gradientColors: [const Color(0xFFFFC107), const Color(0xFFFF9800)],
                   ),

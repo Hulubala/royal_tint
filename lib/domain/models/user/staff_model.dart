@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class StaffModel {
   final String id;
   final String uid;
+  final String staffID;
   final String name;
   final String email;
   final String phone;
@@ -12,14 +13,13 @@ class StaffModel {
   final bool isActive;
   final DateTime dateJoined;
   final DateTime? lastActiveDate;
-  final String? profileImage;
-  final List<String> expertise;
-  final double rating;
-  final int totalCompletedTasks;
+  final int completedTasks;
+  final int currentTaskCount;
 
   StaffModel({
     required this.id,
     required this.uid,
+    required this.staffID,
     required this.name,
     required this.email,
     required this.phone,
@@ -29,19 +29,18 @@ class StaffModel {
     this.isActive = true,
     required this.dateJoined,
     this.lastActiveDate,
-    this.profileImage,
-    this.expertise = const [],
-    this.rating = 0.0,
-    this.totalCompletedTasks = 0,
+    this.completedTasks = 0,
+    this.currentTaskCount = 0,
   });
 
-  /// Create StaffModel from Firestore document
   factory StaffModel.fromFirestore(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+    final raw = doc.data();
+    final data = (raw is Map<String, dynamic>) ? raw : <String, dynamic>{};
     
     return StaffModel(
       id: doc.id,
       uid: data['uid'] ?? '',
+      staffID: data['staffID'] ?? '', 
       name: data['name'] ?? '',
       email: data['email'] ?? '',
       phone: data['phone'] ?? '',
@@ -51,10 +50,8 @@ class StaffModel {
       isActive: data['isActive'] ?? true,
       dateJoined: (data['dateJoined'] as Timestamp?)?.toDate() ?? DateTime.now(),
       lastActiveDate: (data['lastActiveDate'] as Timestamp?)?.toDate(),
-      profileImage: data['profileImage'],
-      expertise: List<String>.from(data['expertise'] ?? []),
-      rating: (data['rating'] ?? 0.0).toDouble(),
-      totalCompletedTasks: data['totalCompletedTasks'] ?? 0,
+      completedTasks: data['completedTasks'] ?? data['totalCompletedTasks'] ?? 0,
+      currentTaskCount: data['currentTaskCount'] ?? 0,
     );
   }
 
@@ -63,6 +60,7 @@ class StaffModel {
     return StaffModel(
       id: json['id'] ?? '',
       uid: json['uid'] ?? '',
+      staffID: json['staffID'] ?? '',
       name: json['name'] ?? '',
       email: json['email'] ?? '',
       phone: json['phone'] ?? '',
@@ -78,10 +76,8 @@ class StaffModel {
               ? (json['lastActiveDate'] as Timestamp).toDate()
               : DateTime.parse(json['lastActiveDate']))
           : null,
-      profileImage: json['profileImage'],
-      expertise: List<String>.from(json['expertise'] ?? []),
-      rating: (json['rating'] ?? 0.0).toDouble(),
-      totalCompletedTasks: json['totalCompletedTasks'] ?? 0,
+      completedTasks: json['completedTasks'] ?? json['totalCompletedTasks'] ?? 0,
+      currentTaskCount: json['currentTaskCount'] ?? 0,
     );
   }
 
@@ -90,6 +86,7 @@ class StaffModel {
     return {
       'id': id,
       'uid': uid,
+      'staffID': staffID,
       'name': name,
       'email': email,
       'phone': phone,
@@ -99,10 +96,8 @@ class StaffModel {
       'isActive': isActive,
       'dateJoined': Timestamp.fromDate(dateJoined),
       'lastActiveDate': lastActiveDate != null ? Timestamp.fromDate(lastActiveDate!) : null,
-      'profileImage': profileImage,
-      'expertise': expertise,
-      'rating': rating,
-      'totalCompletedTasks': totalCompletedTasks,
+      'completedTasks': completedTasks,
+      'currentTaskCount': currentTaskCount,
     };
   }
 
@@ -115,6 +110,7 @@ class StaffModel {
   StaffModel copyWith({
     String? id,
     String? uid,
+    String? staffID,
     String? name,
     String? email,
     String? phone,
@@ -124,14 +120,13 @@ class StaffModel {
     bool? isActive,
     DateTime? dateJoined,
     DateTime? lastActiveDate,
-    String? profileImage,
-    List<String>? expertise,
-    double? rating,
-    int? totalCompletedTasks,
+    int? completedTasks,
+    int? currentTaskCount,
   }) {
     return StaffModel(
       id: id ?? this.id,
       uid: uid ?? this.uid,
+      staffID: staffID ?? this.staffID,
       name: name ?? this.name,
       email: email ?? this.email,
       phone: phone ?? this.phone,
@@ -141,15 +136,13 @@ class StaffModel {
       isActive: isActive ?? this.isActive,
       dateJoined: dateJoined ?? this.dateJoined,
       lastActiveDate: lastActiveDate ?? this.lastActiveDate,
-      profileImage: profileImage ?? this.profileImage,
-      expertise: expertise ?? this.expertise,
-      rating: rating ?? this.rating,
-      totalCompletedTasks: totalCompletedTasks ?? this.totalCompletedTasks,
+      completedTasks: completedTasks ?? this.completedTasks,
+      currentTaskCount: currentTaskCount ?? this.currentTaskCount,
     );
   }
 
   @override
   String toString() {
-    return 'StaffModel(id: $id, name: $name, role: $role, branchID: $branchID, isActive: $isActive)';
+    return 'StaffModel(id: $id, staffID: $staffID, name: $name, role: $role, branchID: $branchID, isActive: $isActive)';
   }
 }

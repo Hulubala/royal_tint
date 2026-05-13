@@ -7,6 +7,7 @@ class ManagerProvider extends ChangeNotifier {
   String? _branchID;
   List<AppointmentModel> _appointments = [];
   List<StaffModel> _staff = [];
+  List<dynamic> _tasks = [];
 
   // Loading and error states
   bool _isLoading = false;
@@ -22,6 +23,7 @@ class ManagerProvider extends ChangeNotifier {
   String? get branchID => _branchID;
   List<AppointmentModel> get appointments => _appointments;
   List<StaffModel> get staff => _staff;
+  List<dynamic> get tasks => _tasks;
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
@@ -55,6 +57,11 @@ class ManagerProvider extends ChangeNotifier {
 
   void setAppointments(List<AppointmentModel> value) {
     _appointments = value;
+    notifyListeners();
+  }
+
+  void setTasks(List<dynamic> value) {
+    _tasks = value;
     notifyListeners();
   }
 

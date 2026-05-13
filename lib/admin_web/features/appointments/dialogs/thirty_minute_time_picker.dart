@@ -159,20 +159,15 @@ class _ThirtyMinuteTimePickerState extends State<ThirtyMinuteTimePicker> {
       final hour = minutes ~/ 60;
       final minute = minutes % 60;
 
-      // ⭐ CRITICAL FIX: For scheduled appointments on FUTURE dates, show ALL slots
-      // Only restrict current time for TODAY's appointments
       if (isToday) {
-        // For walk-in on today: must be from NOW onwards
         if (widget.isWalkIn && minutes < currentMinutes) {
           continue;
         }
-        // For scheduled on today: must be at least 30min from now (give prep time)
         if (!widget.isWalkIn && minutes < currentMinutes + 30) {
           continue;
         }
       }
 
-      // ⛔ Skip slots that would overflow past closing time
       if (minutes + widget.estimatedDuration > maxMinutes) {
         continue;
       }

@@ -1,0 +1,238 @@
+brandKey,brandName,modelKey,modelName,type,minutes
+perodua,Perodua,axia,Axia,Sedan,60
+perodua,Perodua,bezza,Bezza,Sedan,60
+perodua,Perodua,kancil,Kancil,Sedan,60
+perodua,Perodua,kelisa,Kelisa,Sedan,60
+perodua,Perodua,kenari,Kenari,Sedan,60
+perodua,Perodua,myvi,Myvi,Sedan,60
+perodua,Perodua,viva,Viva,Sedan,60
+perodua,Perodua,ativa,Ativa,SUV,90
+perodua,Perodua,aruz,Aruz,SUV,90
+perodua,Perodua,kembara,Kembara,SUV,90
+perodua,Perodua,traz,Traz,SUV,90
+perodua,Perodua,alza,Alza,MPV,120
+
+proton,Proton,emas_5,e.MAS 5,Sedan,60
+proton,Proton,gen_2,Gen-2,Sedan,60
+proton,Proton,saga,Saga,Sedan,60
+proton,Proton,inspira,Inspira,Sedan,60
+proton,Proton,iriz,Iriz,Sedan,60
+proton,Proton,perdana,Perdana,Sedan,60
+proton,Proton,persona,Persona,Sedan,60
+proton,Proton,preve,Preve,Sedan,60
+proton,Proton,s70,S70,Sedan,60
+proton,Proton,satria,Satria,Sedan,60
+proton,Proton,suprima_s,Suprima S,Sedan,60
+proton,Proton,waja,Waja,Sedan,60
+proton,Proton,wira,Wira,Sedan,60
+proton,Proton,emas_7,e.MAS 7,SUV,90
+proton,Proton,x50,X50,SUV,90
+proton,Proton,x70,X70,SUV,90
+proton,Proton,x90,X90,SUV,90
+proton,Proton,ertiga,Ertiga,MPV,120
+proton,Proton,exora,Exora,MPV,120
+
+toyota,Toyota,camry,Camry,Sedan,60
+toyota,Toyota,corolla_altis,Corolla Altis,Sedan,60
+toyota,Toyota,corolla_sport,Corolla Sport,Sedan,60
+toyota,Toyota,crown,Crown,Sedan,60
+toyota,Toyota,mark_x,Mark X,Sedan,60
+toyota,Toyota,prius,Prius,Sedan,60
+toyota,Toyota,vios,Vios,Sedan,60
+toyota,Toyota,yaris,Yaris,Sedan,60
+toyota,Toyota,c_hr,C-HR,SUV,90
+toyota,Toyota,corolla_cross,Corolla Cross,SUV,90
+toyota,Toyota,crown_sport,Crown Sport,SUV,90
+toyota,Toyota,fj_cruiser,FJ Cruiser,SUV,90
+toyota,Toyota,fortuner,Fortuner,SUV,90
+toyota,Toyota,harrier,Harrier,SUV,90
+toyota,Toyota,hilux,Hilux,SUV,90
+toyota,Toyota,land_cruiser,Land Cruiser,SUV,90
+toyota,Toyota,land_cruiser_prado,Land Cruiser Prado,SUV,90
+toyota,Toyota,rav4,RAV4,SUV,90
+toyota,Toyota,rush,Rush,SUV,90
+toyota,Toyota,alphard,Alphard,MPV,120
+toyota,Toyota,avanza,Avanza,MPV,120
+toyota,Toyota,estima,Estima,MPV,120
+toyota,Toyota,granace,Granace,MPV,120
+toyota,Toyota,innova,Innova,MPV,120
+toyota,Toyota,noah,Noah,MPV,120
+toyota,Toyota,roomy,Roomy,MPV,120
+toyota,Toyota,sienta,Sienta,MPV,120
+toyota,Toyota,tank,Tank,MPV,120
+toyota,Toyota,vellfire,Vellfire,MPV,120
+toyota,Toyota,veloz,Veloz,MPV,120
+toyota,Toyota,voxy,Voxy,MPV,120
+toyota,Toyota,wish,Wish,MPV,120
+
+honda,Honda,accord,Accord,Sedan,60
+honda,Honda,city,City,Sedan,60
+honda,Honda,civic,Civic,Sedan,60
+honda,Honda,cr_z,CR-Z,Sedan,60
+honda,Honda,insight,Insight,Sedan,60
+honda,Honda,jazz,Jazz,Sedan,60
+honda,Honda,br_v,BR-V,SUV,90
+honda,Honda,cr_v,CR-V,SUV,90
+honda,Honda,hr_v,HR-V,SUV,90
+honda,Honda,wr_v,WR-V,SUV,90
+honda,Honda,freed,Freed,MPV,120
+honda,Honda,odyssey,Odyssey,MPV,120
+honda,Honda,step_wgn,Step WGN,MPV,120
+honda,Honda,stream,Stream,MPV,120
+
+nissan,Nissan,almera,Almera,Sedan,60
+nissan,Nissan,sentra,Sentra,Sedan,60
+nissan,Nissan,sylphy,Sylphy,Sedan,60
+nissan,Nissan,teana,Teana,Sedan,60
+nissan,Nissan,navara,Navara,SUV,90
+nissan,Nissan,x_trail,X-Trail,SUV,90
+nissan,Nissan,kicks,Kicks,SUV,90
+nissan,Nissan,elgrand,Elgrand,MPV,120
+nissan,Nissan,grand_livina,Grand Livina,MPV,120
+nissan,Nissan,serena,Serena,MPV,120
+
+mazda,Mazda,2,Mazda 2,Sedan,60
+mazda,Mazda,3,Mazda 3,Sedan,60
+mazda,Mazda,6,Mazda 6,Sedan,60
+mazda,Mazda,cx_3,CX-3,SUV,90
+mazda,Mazda,cx_5,CX-5,SUV,90
+mazda,Mazda,cx_8,CX-8,SUV,90
+mazda,Mazda,cx_9,CX-9,SUV,90
+mazda,Mazda,cx_30,CX-30,SUV,90
+mazda,Mazda,cx_60,CX-60,SUV,90
+mazda,Mazda,5,Mazda 5,MPV,120
+mazda,Mazda,8,Mazda 8,MPV,120
+mazda,Mazda,Biante,Biante,MPV,120
+
+mitsubishi,Mitsubishi,attrage,Attrage,Sedan,60
+mitsubishi,Mitsubishi,lancer,Lancer,Sedan,60
+mitsubishi,Mitsubishi,mirage,Mirage,Sedan,60
+mitsubishi,Mitsubishi,asx,ASX,SUV,90
+mitsubishi,Mitsubishi,outlander,Outlander,SUV,90
+mitsubishi,Mitsubishi,pajero_sport,Pajero Sport,SUV,90
+mitsubishi,Mitsubishi,triton,Triton,SUV,90
+mitsubishi,Mitsubishi,grandis,Grandis,MPV,120
+mitsubishi,Mitsubishi,xpander,Xpander,MPV,120
+
+hyundai,Hyundai,elantra,Elantra,Sedan,60
+hyundai,Hyundai,ioniq,Ioniq,Sedan,60
+hyundai,Hyundai,sonata,Sonata,Sedan,60
+hyundai,Hyundai,veloster,Veloster,Sedan,60
+hyundai,Hyundai,kona,Kona,SUV,90
+hyundai,Hyundai,santa_fe,Santa Fe,SUV,90
+hyundai,Hyundai,tucson,Tucson,SUV,90
+hyundai,Hyundai,grand_starex,Grand Starex,MPV,120
+hyundai,Hyundai,staria,Staria,MPV,120
+
+kia,Kia,cerato,Cerato,Sedan,60
+kia,Kia,forte,Forte,Sedan,60
+kia,Kia,optima_k5,Optima K5,Sedan,60
+kia,Kia,picanto,Picanto,Sedan,60
+kia,Kia,rio,Rio,Sedan,60
+kia,Kia,sonet,Sonet,SUV,90
+kia,Kia,sorento,Sorento,SUV,90
+kia,Kia,sportage,Sportage,SUV,90
+kia,Kia,carnival,Carnival,MPV,120
+kia,Kia,grand_carnival,Grand Carnival,MPV,120
+
+mercedes_benz,Mercedes-Benz,a_class,A-Class,Sedan,60
+mercedes_benz,Mercedes-Benz,b_class,B-Class,Sedan,60
+mercedes_benz,Mercedes-Benz,c_class,C-Class,Sedan,60
+mercedes_benz,Mercedes-Benz,e_class,E-Class,Sedan,60
+mercedes_benz,Mercedes-Benz,s_class,S-Class,Sedan,60
+mercedes_benz,Mercedes-Benz,g_class,G-Class,SUV,90
+mercedes_benz,Mercedes-Benz,gla_class,GLA-Class,SUV,90
+mercedes_benz,Mercedes-Benz,glb_class,GLB-Class,SUV,90
+mercedes_benz,Mercedes-Benz,glc_class,GLC-Class,SUV,90
+mercedes_benz,Mercedes-Benz,gle_class,GLE-Class,SUV,90
+mercedes_benz,Mercedes-Benz,v_class,V-Class,MPV,120
+
+bmw,BMW,1_series,1 Series,Sedan,60
+bmw,BMW,2_series,2 Series,Sedan,60
+bmw,BMW,3_series,3 Series,Sedan,60
+bmw,BMW,5_series,5 Series,Sedan,60
+bmw,BMW,6_series,6 Series,Sedan,60
+bmw,BMW,7_series,7 Series,Sedan,60
+bmw,BMW,i_sedan,i (Sedan),Sedan,60
+bmw,BMW,m,M,Sedan,60
+bmw,BMW,i_suv,i (SUV),SUV,90
+bmw,BMW,x,x,SUV,90
+
+lexus,Lexus,ct_200h,CT 200h,Sedan,60
+lexus,Lexus,es_250,ES 250,Sedan,60
+lexus,Lexus,is_250,IS 250,Sedan,60
+lexus,Lexus,is_300,IS 300,Sedan,60
+lexus,Lexus,ls_500,LS 500,Sedan,60
+lexus,Lexus,gx_550,GX 550,SUV,90
+lexus,Lexus,lbx,LBX,SUV,90
+lexus,Lexus,lx_570,LX 570,SUV,90
+lexus,Lexus,lx_600,LX 600,SUV,90
+lexus,Lexus,nx_200t,NX 200t,SUV,90
+lexus,Lexus,nx_250,NX 250,SUV,90
+lexus,Lexus,nx_300,NX 300,SUV,90
+lexus,Lexus,nx_350,NX 350,SUV,90
+lexus,Lexus,rx_200t,RX 200t,SUV,90
+lexus,Lexus,rx_270,RX 270,SUV,90
+lexus,Lexus,rx_300,RX 300,SUV,90
+lexus,Lexus,rx_350,RX 350,SUV,90
+lexus,Lexus,rx_500h,RX 500h,SUV,90
+lexus,Lexus,ux_200,UX 200,SUV,90
+lexus,Lexus,lm_500h,LM 500h,MPV,120
+
+porsche,Porsche,panamera,Panamera,Sedan,60
+porsche,Porsche,taycan,Taycan,Sedan,60
+porsche,Porsche,cayenne,Cayenne,SUV,90
+porsche,Porsche,macan,Macan,SUV,90
+
+audi,Audi,a3,A3,Sedan,60
+audi,Audi,a4,A4,Sedan,60
+audi,Audi,a5,A5,Sedan,60
+audi,Audi,a6,A6,Sedan,60
+audi,Audi,a7,A7,Sedan,60
+audi,Audi,a8,A8,Sedan,60
+audi,Audi,rs3,RS3,Sedan,60
+audi,Audi,rs5,RS5,Sedan,60
+audi,Audi,rs7,RS7,Sedan,60
+audi,Audi,s3,S3,Sedan,60
+audi,Audi,s5,S5,Sedan,60
+audi,Audi,q3,Q3,SUV,90
+audi,Audi,q5,Q5,SUV,90
+audi,Audi,q7,Q7,SUV,90
+audi,Audi,q8,Q8,SUV,90
+
+byd,BYD,dolphin,Dolphin,Sedan,60
+byd,BYD,seal,Seal,Sedan,60
+byd,BYD,seal_6,Seal 6,Sedan,60
+byd,BYD,atto_2,Atto 2,SUV,90
+byd,BYD,atto_3,Atto 3,SUV,90
+byd,BYD,sealion_7,Sealion 7,SUV,90
+
+peugeot,Peugeot,208,208,Sedan,60
+peugeot,Peugeot,308,308,Sedan,60
+peugeot,Peugeot,508,508,Sedan,60
+peugeot,Peugeot,2008,2008,SUV,90
+peugeot,Peugeot,3008,3008,SUV,90
+peugeot,Peugeot,5008,5008,SUV,90
+
+subaru,Subaru,wrx,Wrx,Sedan,60
+subaru,Subaru,forester,Forester,SUV,90
+subaru,Subaru,xv,XV,SUV,90
+
+volkswagen,Volkswagen,arteon,Arteon,Sedan,60
+volkswagen,Volkswagen,golf,Golf,Sedan,60
+volkswagen,Volkswagen,jetta,Jetta,Sedan,60
+volkswagen,Volkswagen,passat,Passat,Sedan,60
+volkswagen,Volkswagen,polo,Polo,Sedan,60
+volkswagen,Volkswagen,scirocco,Scirocco,Sedan,60
+volkswagen,Volkswagen,vento,Vento,Sedan,60
+volkswagen,Volkswagen,tiguan,Tiguan,SUV,90
+volkswagen,Volkswagen,sharan,Sharan,MPV,120
+
+volvo,Volvo,v40,V40,Sedan,60
+volvo,Volvo,s60,S60,Sedan,60
+volvo,Volvo,s90,S90,Sedan,60
+volvo,Volvo,c40,C40,SUV,90
+volvo,Volvo,ex30,EX30,SUV,90
+volvo,Volvo,xc40,XC40,SUV,90
+volvo,Volvo,xc60,XC60,SUV,90
+volvo,Volvo,xc90,XC90,SUV,90

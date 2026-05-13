@@ -2,6 +2,7 @@
 /// 
 /// This file contains all Firebase Firestore collection names and common field names
 /// to maintain consistency across the app and avoid typos.
+library;
 
 class FirebaseConstants {
   // Private constructor to prevent instantiation

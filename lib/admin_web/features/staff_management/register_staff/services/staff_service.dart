@@ -14,7 +14,6 @@ class StaffService {
     required String staffEmail,
     required String staffPhone,
     required String Password,
-    required List<String> expertise,
   }) async {
     try {
       // 1. Get current user (manager) to restore later
@@ -53,17 +52,12 @@ class StaffService {
         'phone': staffPhone,
         'branchID': managerBranchID,
         'branchName': await _getBranchName(managerBranchID),
-        'role': 'Technician',
-        'expertise': expertise,
         'employeeNumber': await _generateEmployeeNumber(managerBranchID),
         'dateJoined': FieldValue.serverTimestamp(),
         'isActive': true,
         'isAvailable': true,
         'currentTaskCount': 0,
         'totalCompletedTasks': 0,
-        'rating': 0.0,
-        'totalRatings': 0,
-        'profileImage': '',
         'notes': 'Account created by manager. Please change password on first login.',
         'createdBy': managerUID,
         'createdAt': FieldValue.serverTimestamp(),
@@ -107,7 +101,7 @@ class StaffService {
     
     int count = staffQuery.docs.length + 1;
     String branchCode = branchID == 'melaka' ? 'MLK' : 'SRB';
-    return 'EMP${branchCode}${count.toString().padLeft(3, '0')}';
+    return 'EMP$branchCode${count.toString().padLeft(3, '0')}';
   }
 
   String _getAuthErrorMessage(String code) {

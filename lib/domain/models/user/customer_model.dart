@@ -1,4 +1,3 @@
-// lib/data/models/customer_model.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CustomerModel {
@@ -47,7 +46,7 @@ class CustomerModel {
           [],
       totalAppointments: data['totalAppointments'] ?? 0,
       totalSpent: (data['totalSpent'] ?? 0).toDouble(),
-      memberSince: (data['memberSince'] as Timestamp).toDate(),
+      memberSince: (data['memberSince'] as Timestamp?)?.toDate() ?? DateTime.now(),
       lastVisit: data['lastVisit'] != null
           ? (data['lastVisit'] as Timestamp).toDate()
           : null,
@@ -105,7 +104,7 @@ class Vehicle {
       model: map['model'] ?? '',
       year: map['year'] ?? 0,
       color: map['color'] ?? '',
-      addedDate: (map['addedDate'] as Timestamp).toDate(),
+      addedDate: (map['addedDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
     );
   }
 

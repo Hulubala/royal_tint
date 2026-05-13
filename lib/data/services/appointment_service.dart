@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:royal_tint/domain/models/appointment_model.dart';
+import 'package:royal_tint/data/repositories/task_repository.dart';
 
 /// Service for managing appointments in Firebase
 class AppointmentService {
@@ -128,18 +129,17 @@ class AppointmentService {
     }
   }
 
-  /// Delete appointment
   Future<void> deleteAppointment(String appointmentID) async {
     try {
+      await TaskRepository().cancelTasksForAppointment(appointmentID);
+
       await _firestore.collection('appointments').doc(appointmentID).delete();
     } catch (e) {
       throw Exception('❌ Error deleting appointment: $e');
     }
   }
 
-  /// Get latest appointments for a branch across ALL dates (Future, not Stream)
-  /// Uses appointmentDate + appointmentTime sorting (both String).
-  /// Assumes appointmentDate format is YYYY-MM-DD and appointmentTime is HH:MM.
+
   Future<List<AppointmentModel>> getLatestAppointments({
     required String branchID,
     int limit = 10,

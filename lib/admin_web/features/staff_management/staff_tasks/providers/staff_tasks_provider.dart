@@ -18,6 +18,7 @@ class StaffTasksProvider extends ChangeNotifier {
   List<StaffMember> staff = [];
   List<AppointmentItem> appointments = [];
 
+  Stream<List<StaffMember>>? staffStream;
   Stream<List<TaskItem>>? activeTasksStream;
 
   Future<void> load({
@@ -28,7 +29,7 @@ class StaffTasksProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      staff = await _service.fetchActiveStaff(branchID);
+      staffStream = _service.streamActiveStaff(branchID);
       appointments = await _service.fetchAssignableAppointments(branchID);
       activeTasksStream = _service.streamActiveTasks(branchID);
     } catch (e) {
@@ -59,7 +60,7 @@ class StaffTasksProvider extends ChangeNotifier {
         createdByManagerUid: createdByManagerUid,
       );
 
-      staff = await _service.fetchActiveStaff(branchID);
+      staffStream = _service.streamActiveStaff(branchID);
       appointments = await _service.fetchAssignableAppointments(branchID);
       return null;
     } catch (e) {
@@ -72,5 +73,39 @@ class StaffTasksProvider extends ChangeNotifier {
 
   Future<Set<String>> getAssignedSectionsForAppointment(String appointmentID) {
     return _service.fetchAssignedMirrorSections(appointmentID);
+  }
+
+  Future<void> completeTask(String taskID, String staffID, String appointmentID) async {
+    if (taskID.trim().isEmpty || staffID.trim().isEmpty) {
+      debugPrint("Aborting: TaskID or StaffID is empty");
+      return;
+    }
+    
+    try {
+      await _service.completeTask(taskID, staffID, appointmentID);
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error completing task: $e");
+    }
+  }
+
+  Future<void> finalizeAppointment(String appointmentID, String branchID) async {
+    try {
+      await _service.finalizeAppointment(appointmentID);
+      // Refresh appointments list
+      appointments = await _service.fetchAssignableAppointments(branchID);
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error finalizing appointment: $e");
+    }
+  }
+
+  Future<void> deleteTask(String taskID, String staffID, String appointmentID) async {
+    try {
+      await _service.deleteTask(taskID, staffID, appointmentID);
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error deleting task: $e");
+    }
   }
 }

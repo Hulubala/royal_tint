@@ -17,7 +17,7 @@ class EditAppointmentDialog extends StatefulWidget {
   final Future<void> Function()? onSaved;
 
   const EditAppointmentDialog(
-      {Key? key, required this.appointment, required this.branchID, this.onSaved}): super(key: key);
+      {super.key, required this.appointment, required this.branchID, this.onSaved});
 
   @override
   State<EditAppointmentDialog> createState() => EditAppointmentDialogState();
@@ -77,9 +77,9 @@ class EditAppointmentDialogState extends State<EditAppointmentDialog> {
 
     _tintSelections = Map<String, String>.from(widget.appointment.tintSelections);
     _tintSelections.putIfAbsent('frontWindshield', () => '');
-    _tintSelections.putIfAbsent('rearWindshield', () => '');
-    _tintSelections.putIfAbsent('leftSide', () => '');
-    _tintSelections.putIfAbsent('rightSide', () => '');
+    _tintSelections.putIfAbsent('rearWindscreen', () => '');
+    _tintSelections.putIfAbsent('frontSideWindows', () => '');
+    _tintSelections.putIfAbsent('rearPassenger', () => '');
   }
 
   @override
@@ -115,9 +115,9 @@ class EditAppointmentDialogState extends State<EditAppointmentDialog> {
         final def = opts.isNotEmpty ? opts.first : ''; 
         _tintSelections = {
           'frontWindshield': def,
-          'rearWindshield': def,
-          'leftSide': def,
-          'rightSide': def,
+          'rearWindscreen': def,
+          'frontSideWindows': def,
+          'rearPassenger': def,
         };
       });
     }
@@ -671,42 +671,25 @@ class EditAppointmentDialogState extends State<EditAppointmentDialog> {
   }
     
   Widget _buildTintSelections() {
-    final options = kPackageDarknessFallback[_selectedPackage?.packageName ?? ''] ?? const <String>[]; // Fetch fallback options for the package
-
-    if (options.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFFFD700), width: 2),
-        ),
-        child: Text(
-          'No darkness options found for package: ${_selectedPackage?.packageName ?? ''}. Please update the package settings.',
-          style: const TextStyle(color: Colors.grey, fontSize: 13),
-        ),
-      );
-    }
-
-    print('Tint Selections: $_tintSelections');
-    print('Package Name: ${_selectedPackage?.packageName}');
-    print('Available Options for Package: $options');
+    final packageName = _selectedPackage?.packageName ?? '';
 
     MenuDropdown<String> tintDropdown(String label, String key) {
+      final allowed = allowedCodesFor(packageName: packageName, sectionKey: key);
+
+      final current = normalizeTintSelection(
+        selection: _tintSelections[key] ?? '',
+        allowedCodes: allowed,
+      );
+
       return MenuDropdown<String>(
         label: label,
         icon: BootstrapIcons.droplet_half,
-        value: _tintSelections[key]?.isNotEmpty ?? false
-            ? mapVLTtoCode(_tintSelections[key]!, _selectedPackage?.packageName ?? '')
-            : null,
-        hint: 'Select darkness',
-        enabled: !_isSaving,
-        items: options.map((code) {
-          return MenuItem<String>(
-            value: code, 
-            label: code, 
-          );
-        }).toList(),
+        value: current.isEmpty ? null : current,
+        hint: allowed.isEmpty ? 'No options' : 'Select darkness',
+        enabled: allowed.isNotEmpty,
+        items: allowed
+            .map((code) => MenuItem<String>(value: code, label: code))
+            .toList(),
         onChanged: (value) {
           if (value == null) return;
           setState(() {
@@ -716,26 +699,54 @@ class EditAppointmentDialogState extends State<EditAppointmentDialog> {
       );
     }
 
+    if (packageName.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.red, width: 2),
+        ),
+        child: const Text(
+          'Please select a package first.',
+          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+        ),
+      );
+    }
+
+    final anyAllowed = TintSections.all.any((k) =>
+        allowedCodesFor(packageName: packageName, sectionKey: k).isNotEmpty);
+
+    if (!anyAllowed) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.red, width: 2),
+        ),
+        child: Text(
+          'No darkness options available for $packageName. Please update your package settings.',
+          style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+        ),
+      );
+    }
+
     return Column(
       children: [
-        const Text(
-          'Darkness Tinted Options',
-          style: TextStyle(color: Color(0xFFFFD700), fontSize: 14, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: tintDropdown('Front Windshield', 'frontWindshield')),
+            Expanded(child: tintDropdown('Front Windscreen', TintSections.frontWindScreen)),
             const SizedBox(width: 12),
-            Expanded(child: tintDropdown('Rear Windshield', 'rearWindshield')),
+            Expanded(child: tintDropdown('Front Side Windows', TintSections.frontSideWindows)),
           ],
         ),
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: tintDropdown('Left Side', 'leftSide')),
+            Expanded(child: tintDropdown('Rear Passenger', TintSections.rearPassenger)),
             const SizedBox(width: 12),
-            Expanded(child: tintDropdown('Right Side', 'rightSide')),
+            Expanded(child: tintDropdown('Rear Windscreeen', TintSections.rearWindscreen)),
           ],
         ),
       ],

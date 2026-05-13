@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'mobile_app/core/auth/shared_preferences_helper.dart';
 
 import 'firebase_options.dart';
 import 'package:royal_tint/core/theme/app_theme.dart';
@@ -52,12 +53,15 @@ Future<void> main() async {
   );
 
   final target = _resolveAppTarget();
-  runApp(MyApp(appTarget: target));
+  final isCustomer = await SharedPreferencesHelper.getUserRoleFromPreferences(); 
+  runApp(MyApp(appTarget: target, isCustomer: isCustomer));
 }
 
 class MyApp extends StatefulWidget {
   final AppTarget appTarget;
-  const MyApp({super.key, required this.appTarget});
+  final bool isCustomer;
+
+  const MyApp({super.key, required this.appTarget, required this.isCustomer});
 
   @override
     State<MyApp> createState() => _MyAppState();

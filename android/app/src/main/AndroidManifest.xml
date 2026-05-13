@@ -1,4 +1,8 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+   package="com.example.royal_tint"> <!-- Ensure this matches your namespace in build.gradle.kts -->
+
+    <!-- Required for Firebase and network-related features -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="royal_tint"
         android:name="${applicationName}"

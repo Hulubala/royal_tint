@@ -65,7 +65,6 @@ class StaffRegistrationProvider extends ChangeNotifier {
         staffEmail: request.staffEmail.trim().toLowerCase(),
         staffPhone: cleanPhone,
         Password: password,
-        expertise: const [],
       );
 
       final ok = result['success'] == true;

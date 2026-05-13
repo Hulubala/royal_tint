@@ -29,15 +29,15 @@ class ManagerDashboardStatsService {
     DateTime? now,
   }) async {
     final t = now ?? DateTime.now();
-    final todayYmd = ymd(t);
     final startOfMonthYmd = ymd(DateTime(t.year, t.month, 1));
+    final endOfMonthYmd = ymd(DateTime(t.year, t.month + 1, 0));
 
     final snap = await _firestore
         .collection(FirebaseConstants.appointmentsCollection)
         .where(FirebaseConstants.fieldBranchId, isEqualTo: branchID)
         .where(FirebaseConstants.fieldStatus, isEqualTo: FirebaseConstants.statusCompleted)
         .where('appointmentDate', isGreaterThanOrEqualTo: startOfMonthYmd)
-        .where('appointmentDate', isLessThanOrEqualTo: todayYmd)
+        .where('appointmentDate', isLessThanOrEqualTo: endOfMonthYmd)
         .get();
 
     return snap.docs.fold<double>(0.0, (sum, doc) {
@@ -45,6 +45,18 @@ class ManagerDashboardStatsService {
       if (v is num) return sum + v.toDouble();
       return sum;
     });
+  }
+
+  Future<int> getPendingTasksCount({
+    required String branchID,
+  }) async {
+    final snap = await _firestore
+        .collection('appointments')
+        .where(FirebaseConstants.fieldBranchId, isEqualTo: branchID)
+        .where('status', isEqualTo: 'pending')
+        .get();
+
+    return snap.docs.length;
   }
 
   Future<int> getActiveStaffCount({

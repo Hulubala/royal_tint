@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:royal_tint/domain/models/appointment_model.dart';
-import 'package:royal_tint/core/constants/tint_constants.dart';
 import 'package:royal_tint/admin_web/features/auth/providers/auth_provider.dart';
 import 'package:royal_tint/admin_web/features/appointments/providers/appointment_provider.dart';
 import 'package:royal_tint/admin_web/features/appointments/controllers/appointment_controller.dart';
@@ -14,6 +13,9 @@ import 'package:royal_tint/admin_web/features/appointments/widgets/appointment_c
 import 'package:royal_tint/admin_web/features/appointments/widgets/appointment_filters.dart';
 import 'package:royal_tint/admin_web/features/appointments/widgets/appointment_stats_row.dart';
 import 'package:royal_tint/admin_web/features/appointments/widgets/appointment_type_filter.dart';
+import 'package:royal_tint/admin_web/features/appointments/dialogs/view_appointment_dialog.dart';
+import 'package:royal_tint/admin_web/features/appointments/dialogs/change_status_dialog.dart';
+import 'package:royal_tint/admin_web/features/appointments/dialogs/delete_appointment_dialog.dart';
 
 class AppointmentManagementScreen extends StatefulWidget {
   const AppointmentManagementScreen({super.key});
@@ -56,15 +58,15 @@ class _AppointmentManagementScreenState
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'pending':
-        return const Color(0xFFFFC107);
+        return const Color(0xFFFFC107); // Amber
       case 'confirmed':
-        return const Color(0xFF4CAF50);
+        return const Color(0xFF00BCD4); // Cyan
       case 'in-progress':
-        return const Color(0xFF2196F3);
+        return const Color(0xFF2196F3); // Blue
       case 'completed':
-        return const Color(0xFF9E9E9E);
+        return const Color(0xFF4CAF50); // Green
       case 'cancelled':
-        return const Color(0xFFF44336);
+        return const Color(0xFFF44336); // Red
       default:
         return Colors.grey;
     }
@@ -262,7 +264,6 @@ class _AppointmentManagementScreenState
   }
 
   Future<void> _selectCalendarDate() async {
-    // Ensure initialDate is at least tomorrow (not today or past)
     final tomorrow = DateTime.now().add(const Duration(days: 1));
     final initialDate = _selectedCalendarDate.isBefore(tomorrow)
         ? tomorrow
@@ -330,7 +331,7 @@ class _AppointmentManagementScreenState
 
     final availableSlots = 2 - activeAppointments.length;
     print(
-        '[CALENDAR] Result: ${activeAppointments.length} appointments overlap, ${availableSlots} slots available');
+        '[CALENDAR] Result: ${activeAppointments.length} appointments overlap, $availableSlots slots available');
 
     return {
       'available': availableSlots > 0,
@@ -402,25 +403,25 @@ class _AppointmentManagementScreenState
       'key': 'pending',
       'label': 'Pending',
       'icon': BootstrapIcons.clock_history,
-      'colors': [Color(0xFFFFC107), Color(0xFFFF9800)],
+      'colors': [Color(0xFFFFC107), Color(0xFFFF9800)], // Amber
     },
     {
       'key': 'confirmed',
       'label': 'Confirmed',
       'icon': BootstrapIcons.check_circle_fill,
-      'colors': [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+      'colors': [Color(0xFF00BCD4), Color(0xFF0097A7)], // Cyan
     },
     {
       'key': 'in-progress',
       'label': 'In-Progress',
       'icon': BootstrapIcons.arrow_repeat,
-      'colors': [Color(0xFF00BCD4), Color(0xFF0097A7)],
+      'colors': [Color(0xFF2196F3), Color(0xFF1976D2)], // Blue
     },
     {
       'key': 'completed',
       'label': 'Completed',
       'icon': BootstrapIcons.check_all,
-      'colors': [Color(0xFF9C27B0), Color(0xFF7B1FA2)],
+      'colors': [Color(0xFF4CAF50), Color(0xFF2E7D32)], // Green
     },
     {
       'key': 'cancelled',
@@ -563,254 +564,14 @@ class _AppointmentManagementScreenState
   }
 
   void _viewAppointment(AppointmentModel appointment) {
-    final isCompleted = appointment.status.toLowerCase() == 'completed';
-    final isInProgress = appointment.status.toLowerCase() == 'in-progress';
-
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: 600,
-          constraints: const BoxConstraints(maxHeight: 700),
-          decoration: BoxDecoration(
-            gradient:
-                const LinearGradient(colors: [Colors.black, Color(0xFF1A1A1A)]),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFFFD700), width: 3),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(
-                  gradient:
-                      LinearGradient(colors: [Colors.black, Color(0xFF1A1A1A)]),
-                  borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(13),
-                      topRight: Radius.circular(13)),
-                  border: Border(
-                      bottom: BorderSide(color: Color(0xFFFFD700), width: 3)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(BootstrapIcons.eye,
-                        color: Color(0xFFFFD700), size: 24),
-                    const SizedBox(width: 12),
-                    const Text('APPOINTMENT DETAILS',
-                        style: TextStyle(
-                            color: Color(0xFFFFD700),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18)),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close, color: Color(0xFFFFD700)),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Content
-              Flexible(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Customer Information Section
-                      _buildSectionHeader('CUSTOMER INFORMATION', BootstrapIcons.person_circle),
-                      const SizedBox(height: 16),
-                      _buildViewRow('NAME:', appointment.customerName),
-                      const SizedBox(height: 12),
-                      _buildViewRow('PHONE:', _formatPhoneNumber(appointment.customerPhone ?? 'N/A')),
-
-                      const SizedBox(height: 24),
-
-                      // Vehicle Information Section
-                      _buildSectionHeader('VEHICLE INFORMATION', BootstrapIcons.car_front_fill),
-                      const SizedBox(height: 16),
-                      _buildViewRow('CAR MODEL:', '${appointment.vehicleBrand} ${appointment.vehicleModel}'),
-                      const SizedBox(height: 12),
-                      _buildViewRow('CAR PLATE:', appointment.vehiclePlate),
-
-                      const SizedBox(height: 24),
-
-                      // Appointment Details Section
-                      _buildSectionHeader('APPOINTMENT DETAILS', BootstrapIcons.calendar_check),
-                      const SizedBox(height: 16),
-                      _buildViewRow('DATE:', _formatDate(appointment.appointmentDate)),
-                      const SizedBox(height: 12),
-                      _buildViewRow('TIME:', _formatTime(appointment.appointmentTime)),
-                      const SizedBox(height: 12),
-                      _buildViewRow('PACKAGE:', appointment.packageName),
-                      const SizedBox(height: 12),
-                      _buildViewRow('PRICE:', 'RM ${appointment.totalPrice.toStringAsFixed(2)}'),
-                      const SizedBox(height: 12),
-                      _buildViewRow(
-                        'STATUS:',
-                        isInProgress ? 'IN-PROGRESS' : appointment.status.toUpperCase(),
-                      ),
-                      if (isCompleted) ...[
-                        const SizedBox(height: 12),
-                        _buildViewRow(
-                          'FINISH SERVICE TIME:',
-                          DateFormat('MMM dd, yyyy hh:mm a').format(appointment.updatedAt),
-                        ),
-                      ],
-
-                      // Darkness Tinted Section
-                      const SizedBox(height: 24),
-                      _buildSectionHeader('DARKNESS TINTED', BootstrapIcons.droplet_half),
-                      const SizedBox(height: 16),
-                      ...buildTintRows(appointment.tintSelections, appointment.packageName),
-
-                      // Notes Section
-                      if (appointment.notes != null && appointment.notes!.isNotEmpty) ...[
-                        const SizedBox(height: 24),
-                        _buildViewRow('NOTES:', appointment.notes!),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-
-              // Footer
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(
-                  gradient:
-                      LinearGradient(colors: [Colors.black, Color(0xFF1A1A1A)]),
-                  borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(13),
-                      bottomRight: Radius.circular(13)),
-                  border: Border(
-                      top: BorderSide(color: Color(0xFFFFD700), width: 2)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey[800],
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 32, vertical: 16),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                      ),
-                      child: const Text('CLOSE',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                    ),
-                    // Hide Edit button for completed and in-progress
-                    if (!isCompleted && !isInProgress)
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          editAppointment(appointment);
-                        },
-                        icon: const Icon(BootstrapIcons.pencil),
-                        label: const Text('EDIT APPOINTMENT',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFD700),
-                          foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 32, vertical: 16),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+      builder: (context) => ViewAppointmentDialog(
+        appointment: appointment,
+        onEdit: editAppointment,
+        onRefresh: _refreshAppointments,
       ),
     );
-  }
-
-  Widget _buildSectionHeader(String title, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-            colors: [Color(0xFFFFD700), Color(0xFFFFC700)]), // Yellow gradient
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.black, size: 20), // Icon with title
-          const SizedBox(width: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildViewRow(String label, String value) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      decoration: BoxDecoration(
-        border: Border(
-            bottom: BorderSide(
-                color: const Color(0xFFFFD700).withOpacity(0.2), width: 1)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label,
-              style: const TextStyle(
-                  color: Color(0xFFFFD700),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13)),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(color: Color(0xFFFFD700), fontSize: 13),
-              textAlign: TextAlign.right,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> buildTintRows(Map<String, String> tintSelections, String packageName) {
-    // Define the preferred order of tint sections
-    final preferredOrder = [
-      'frontWindshield',
-      'rearWindshield',
-      'leftSide',
-      'rightSide',
-    ];
-
-    // Sort tint sections based on preferred order
-    final sortedEntries = preferredOrder.map((key) {
-      if (tintSelections.containsKey(key)) {
-        final section = key
-            .replaceAllMapped(RegExp(r'([A-Z])'), (match) => ' ${match.group(0)}')
-            .toUpperCase(); // Convert to uppercase
-        final darknessCode = mapVLTtoCode(tintSelections[key]!, packageName); // Convert VLT -> Code
-        return _buildViewRow('$section:', darknessCode);
-      }
-      return const SizedBox.shrink(); // Handle missing keys gracefully (shouldn't happen)
-    }).toList();
-
-    return sortedEntries;
   }
 
   void editAppointment(AppointmentModel appointment) {
@@ -822,558 +583,36 @@ class _AppointmentManagementScreenState
   }
 
   void _showStatusDialog(AppointmentModel appointment) {
-    final currentStatus = appointment.status.toLowerCase();
-
+    final authProvider = context.read<AuthProvider>();
+    if (authProvider.branchID == null) return;
+    
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: 400,
-          decoration: BoxDecoration(
-            color: Colors.black,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFFFD700), width: 2),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Simple Header
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Colors.black,
-                  borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(10),
-                      topRight: Radius.circular(10)),
-                ),
-                child: Row(
-                  children: [
-                    const Text(
-                      'Change Status',
-                      style: TextStyle(
-                          color: Color(0xFFFFD700),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Color(0xFFFFD700)),
-                      onPressed: () => Navigator.pop(context),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Status options in black box
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.black,
-                  border: Border.all(
-                      color: const Color(0xFFFFD700).withOpacity(0.3),
-                      width: 1),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (currentStatus == 'pending') ...[
-                      _buildStatusChangeOption(
-                        appointment,
-                        'MARK CONFIRMED',
-                        'confirmed',
-                        BootstrapIcons.check_circle,
-                        const Color(0xFF4CAF50),
-                      ),
-                      _buildStatusChangeOption(
-                        appointment,
-                        'CANCEL',
-                        'cancelled',
-                        BootstrapIcons.x_circle,
-                        const Color(0xFFF44336),
-                      ),
-                    ]
-                    else if (currentStatus == 'confirmed') ...[
-                      _buildStatusChangeOption(
-                        appointment,
-                        'MARK COMPLETED',
-                        'completed',
-                        BootstrapIcons.check_all,
-                        const Color(0xFF9E9E9E),
-                      ),
-                      _buildStatusChangeOption(
-                        appointment,
-                        'CANCEL',
-                        'cancelled',
-                        BootstrapIcons.x_circle,
-                        const Color(0xFFF44336),
-                      ),
-                    ]
-                    else if (currentStatus == 'in-progress') ...[
-                      _buildStatusChangeOption(
-                        appointment,
-                        'MARK COMPLETED',
-                        'completed',
-                        BootstrapIcons.check_all,
-                        const Color(0xFF9E9E9E),
-                      ),
-                    ]
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+      builder: (context) => ChangeStatusDialog(
+        appointment: appointment,
+        branchID: authProvider.branchID!,
+        appointmentProvider: context.read<AppointmentProvider>(),
+        controller: _controller,
       ),
     );
   }
-
-  Widget _buildStatusChangeOption(
-    AppointmentModel appointment,
-    String label,
-    String newStatus,
-    IconData icon,
-    Color color,
-  ) {
-    return InkWell(
-      onTap: () {
-        Navigator.pop(context);
-        _confirmStatusChange(appointment, newStatus, label);
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color, width: 2),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(width: 12),
-            Text(
-              label,
-              style: TextStyle(
-                  color: color, fontWeight: FontWeight.bold, fontSize: 14),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _confirmStatusChange(
-      AppointmentModel appointment, String newStatus, String label) async {
-    // Show confirmation dialog
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: 400,
-          decoration: BoxDecoration(
-            gradient:
-                const LinearGradient(colors: [Colors.black, Color(0xFF1A1A1A)]),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFFFC107), width: 3),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Amber Header
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                      colors: [Color(0xFFFFC107), Color(0xFFFFA000)]),
-                  borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(13),
-                      topRight: Radius.circular(13)),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(BootstrapIcons.exclamation_triangle,
-                        color: Colors.black, size: 24),
-                    SizedBox(width: 12),
-                    Text('CONFIRM STATUS CHANGE',
-                        style: TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16)),
-                  ],
-                ),
-              ),
-
-              // Content
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    const Text(
-                      'Are you sure you want to change the appointment status?',
-                      style: TextStyle(color: Color(0xFFFFD700), fontSize: 14),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Status Info Box
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                            color: const Color(0xFFFFD700), width: 2),
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'CURRENT STATUS:',
-                                style: TextStyle(
-                                    color: Color(0xFFFFD700),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13),
-                              ),
-                              Text(
-                                appointment.status.toUpperCase(),
-                                style: const TextStyle(
-                                    color: Color(0xFFFFD700), fontSize: 13),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'NEW STATUS:',
-                                style: TextStyle(
-                                    color: Color(0xFFFFD700),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13),
-                              ),
-                              Text(
-                                newStatus.toUpperCase(),
-                                style: const TextStyle(
-                                    color: Color(0xFFFFD700), fontSize: 13),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey[800],
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8)),
-                            ),
-                            child: const Text('CANCEL',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 14)),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFFC107),
-                              foregroundColor: Colors.black,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8)),
-                            ),
-                            child: const Text('CONFIRM CHANGE',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 14)),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        bool _isValidStatusTransition(String from, String to) {
-          final f = from.toLowerCase().trim();
-          final t = to.toLowerCase().trim();
-
-          if (t == 'pending') return false;
-          if (f == 'completed' || f == 'cancelled') return false;
-          if (f == 'pending') return t == 'confirmed' || t == 'cancelled';
-          if (f == 'confirmed') return t == 'completed' || t == 'cancelled';
-          if (f == 'in-progress') return t == 'completed' || t == 'cancelled';
-          return false;
-        }
-
-        if (!_isValidStatusTransition(appointment.status, newStatus)) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Invalid status change: ${appointment.status.toUpperCase()} → ${newStatus.toUpperCase()}',
-              ),
-              backgroundColor: Colors.red,
-            ),
-          );
-          return;
-        }
-
-        final branchID = context.read<AuthProvider>().branchID;
-        if (branchID == null) return;
-
-        await _controller.changeStatus(
-          provider: context.read<AppointmentProvider>(),
-          branchID: branchID,
-          appointmentID: appointment.appointmentID,
-          newStatus: newStatus,
-        );
-
-        if (!mounted) return;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Status updated to ${newStatus.toUpperCase()}'),
-            backgroundColor: const Color(0xFF4CAF50),
-          ),
-        );
-      } catch (e) {
-        if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('Error updating status: $e'),
-                backgroundColor: Colors.red),
-          );
-        }
-      }
-    }
 
   Future<void> _deleteAppointment(AppointmentModel appointment) async {
+    final authProvider = context.read<AuthProvider>();
+    if (authProvider.branchID == null) return;
+
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          width: 500,
-          decoration: BoxDecoration(
-            gradient:
-                const LinearGradient(colors: [Color(0xFF1A1A1A), Colors.black]),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFF44336), width: 3),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Red Header
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                      colors: [Color(0xFFF44336), Color(0xFFD32F2F)]),
-                  borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(13),
-                      topRight: Radius.circular(13)),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(BootstrapIcons.trash, color: Colors.white, size: 24),
-                    SizedBox(width: 12),
-                    Text('DELETE APPOINTMENT',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18)),
-                  ],
-                ),
-              ),
-
-              // Content
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    const Text(
-                      'Are you sure you want to delete this appointment?',
-                      style: TextStyle(
-                          color: Color(0xFFFFD700),
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Warning Box
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF44336).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                            color: const Color(0xFFF44336), width: 2),
-                      ),
-                      child: const Row(
-                        children: [
-                          Icon(BootstrapIcons.exclamation_triangle,
-                              color: Color(0xFFF44336), size: 24),
-                          SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'This action cannot be undone.',
-                              style: TextStyle(
-                                  color: Color(0xFFF44336),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Appointment Details
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                            color: const Color(0xFFFFD700), width: 2),
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text('CUSTOMER:',
-                                  style: TextStyle(
-                                      color: Color(0xFFFFD700),
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13)),
-                              Text(appointment.customerName,
-                                  style: const TextStyle(
-                                      color: Color(0xFFFFD700), fontSize: 13)),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text('DATE:',
-                                  style: TextStyle(
-                                      color: Color(0xFFFFD700),
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13)),
-                              Text(
-                                  '${_formatDate(appointment.appointmentDate)} at ${_formatTime(appointment.appointmentTime)}',
-                                  style: const TextStyle(
-                                      color: Color(0xFFFFD700), fontSize: 13)),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey[800],
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8)),
-                            ),
-                            child: const Text('CANCEL',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 14)),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () => Navigator.pop(context, true),
-                            icon: const Icon(BootstrapIcons.trash),
-                            label: const Text('DELETE APPOINTMENT',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 14)),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFF44336),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8)),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+      builder: (context) => DeleteAppointmentDialog(
+        appointment: appointment,
+        branchID: authProvider.branchID!,
+        appointmentProvider: context.read<AppointmentProvider>(),
+        controller: _controller,
       ),
     );
 
     if (confirm == true) {
-      try {
-        final branchID = context.read<AuthProvider>().branchID;
-        if (branchID == null) return;
-
-        await _controller.delete(
-          provider: context.read<AppointmentProvider>(),
-          branchID: branchID,
-          appointmentID: appointment.appointmentID,
-        );
-
-        if (!mounted) return;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Appointment deleted successfully'),
-            backgroundColor: Color(0xFFF44336),
-          ),
-        );
-      } catch (e) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error deleting: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      _refreshAppointments();
     }
   }
 
@@ -1394,4 +633,3 @@ class _AppointmentManagementScreenState
     );
   }
 }
-

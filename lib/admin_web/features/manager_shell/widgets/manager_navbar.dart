@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:royal_tint/admin_web/features/auth/providers/auth_provider.dart';
 import 'package:royal_tint/admin_web/features/dashboard/providers/manager_provider.dart';
 import 'package:royal_tint/domain/models/appointment_model.dart';
+import 'package:royal_tint/data/services/appointment_service.dart';
 
 class ManagerNavbar extends StatefulWidget {
   const ManagerNavbar({super.key});
@@ -40,7 +41,7 @@ class _ManagerNavbarState extends State<ManagerNavbar> {
   
   int get unreadCount {
     try {
-      final mgr = context.read<ManagerProvider>();
+      final mgr = context.watch<ManagerProvider>();
       return _todayUpcomingCount(mgr.appointments);
     } catch (_) {
       return 0;
@@ -155,48 +156,58 @@ class _ManagerNavbarState extends State<ManagerNavbar> {
   }
 
   Widget _buildNotificationIcon() {
-    return MouseRegion(
-      key: _notificationKey,
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: () => _notificationOverlay == null ? _showNotificationOverlay() : _hideNotificationOverlay(),
-        child: Container(
-          width: 42,
-          height: 42,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: const Color(0xFFFFD700).withOpacity(0.1),
-            border: Border.all(color: const Color(0xFFFFD700), width: 2),
-          ),
-          child: Stack(
-            children: [
-              const Center(
-                child: Icon(BootstrapIcons.bell_fill, color: Color(0xFFFFD700), size: 18),
+    final branchID = context.read<AuthProvider>().branchID;
+    if (branchID == null) return const SizedBox.shrink();
+
+    return StreamBuilder<List<AppointmentModel>>(
+      stream: AppointmentService().getAppointmentsStream(branchID),
+      builder: (context, snapshot) {
+        final count = snapshot.hasData ? _todayUpcomingCount(snapshot.data!) : 0;
+        
+        return MouseRegion(
+          key: _notificationKey,
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () => _notificationOverlay == null ? _showNotificationOverlay() : _hideNotificationOverlay(),
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFFFD700).withOpacity(0.1),
+                border: Border.all(color: const Color(0xFFFFD700), width: 2),
               ),
-              if (unreadCount > 0)
-                Positioned(
-                  top: -2,
-                  right: -2,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDC3545),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.black, width: 2),
-                    ),
-                    constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
-                    child: Center(
-                      child: Text(
-                        '$unreadCount',
-                        style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700),
+              child: Stack(
+                children: [
+                  const Center(
+                    child: Icon(BootstrapIcons.bell_fill, color: Color(0xFFFFD700), size: 18),
+                  ),
+                  if (count > 0)
+                    Positioned(
+                      top: -2,
+                      right: -2,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDC3545),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.black, width: 2),
+                        ),
+                        constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                        child: Center(
+                          child: Text(
+                            '$count',
+                            style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-            ],
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      }
     );
   }
 

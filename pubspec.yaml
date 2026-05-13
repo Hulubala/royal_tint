@@ -10,6 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  shared_preferences: ^2.1.1
+  dart_firebase_admin: 0.4.1
   
   # State Management
   provider: ^6.1.5
