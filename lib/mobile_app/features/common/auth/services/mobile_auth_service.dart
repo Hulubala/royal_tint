@@ -67,7 +67,7 @@ class MobileAuthService {
       await _auth.sendPasswordResetEmail(
         email: email.trim(),
         actionCodeSettings: ActionCodeSettings(
-          url: 'https://royal-tint-admin.vercel.app/', // Customer/Staff uses base app
+          url: 'https://royal-tint-admin.vercel.app/mobile-success',
           handleCodeInApp: false,
         ),
       );

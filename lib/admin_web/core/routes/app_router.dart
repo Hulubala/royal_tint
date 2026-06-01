@@ -10,6 +10,7 @@ import 'package:royal_tint/admin_web/features/staff_management/register_staff/sc
 import 'package:royal_tint/admin_web/features/staff_management/staff_tasks/screens/staff_tasks_screen.dart';
 import 'package:royal_tint/admin_web/features/profiles/screens/profile_screen.dart';
 import 'package:royal_tint/admin_web/features/auth/screens/login_screen.dart';
+import 'package:royal_tint/admin_web/features/auth/screens/mobile_success_screen.dart';
 import 'package:royal_tint/admin_web/features/staff_management/staff_list/screens/staff_list_screen.dart';
 import 'package:royal_tint/admin_web/features/staff_management/staff_list/screens/staff_schedule_screen.dart';
 import 'package:royal_tint/admin_web/features/feedback/screens/feedback_management_screen.dart';
@@ -38,8 +39,9 @@ class AdminWebAppRouter {
 
         final isAuthenticated = authProvider.isAuthenticated;
         final isLoggingIn = state.uri.path == '/manager/login';
+        final isMobileSuccess = state.uri.path == '/mobile-success';
 
-        if (!isAuthenticated && !isLoggingIn) {
+        if (!isAuthenticated && !isLoggingIn && !isMobileSuccess) {
           return '/manager/login';
         }
 
@@ -58,6 +60,15 @@ class AdminWebAppRouter {
           path: '/manager/login',
           name: 'manager-login',
           builder: (context, state) => const ManagerLoginScreen(),
+        ),
+
+        // ============================================
+        // MOBILE SUCCESS REDIRECT
+        // ============================================
+        GoRoute(
+          path: '/mobile-success',
+          name: 'mobile-success',
+          builder: (context, state) => const MobileSuccessScreen(),
         ),
 
 
