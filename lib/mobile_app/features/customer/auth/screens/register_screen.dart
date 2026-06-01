@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:royal_tint/mobile_app/features/common/auth/services/mobile_auth_service.dart';
+import 'package:royal_tint/core/widgets/password_strength_indicator.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -81,7 +82,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 12),
             _field('Email', _emailCtrl, icon: Icons.email_outlined, keyboardType: TextInputType.emailAddress),
             const SizedBox(height: 12),
-            _passwordField('Password', _passCtrl),
+            AnimatedBuilder(
+              animation: _passCtrl,
+              builder: (context, child) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _passwordField('Password', _passCtrl),
+                    PasswordStrengthIndicator(password: _passCtrl.text),
+                  ],
+                );
+              },
+            ),
             const SizedBox(height: 12),
             _passwordField('Confirm Password', _confirmCtrl),
             const SizedBox(height: 18),

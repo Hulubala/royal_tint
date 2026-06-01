@@ -46,10 +46,10 @@ class ConsolidatedTaskCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.black,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.5), width: 1.5),
+        border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.5), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -83,7 +83,7 @@ class ConsolidatedTaskCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A1A),
         borderRadius: const BorderRadius.only(topLeft: Radius.circular(11), topRight: Radius.circular(11)),
-        border: Border(bottom: BorderSide(color: color.withOpacity(0.3), width: 1)),
+        border: Border(bottom: BorderSide(color: color.withValues(alpha: 0.3), width: 1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -101,9 +101,9 @@ class ConsolidatedTaskCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
+              color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: color.withOpacity(0.5)),
+              border: Border.all(color: color.withValues(alpha: 0.5)),
             ),
             child: Text(
               status,
@@ -127,7 +127,7 @@ class ConsolidatedTaskCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF2A2A2A),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.2)),
+              border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.2)),
             ),
             child: const Icon(BootstrapIcons.car_front_fill, color: Color(0xFFFFD700), size: 22),
           ),
@@ -167,7 +167,7 @@ class ConsolidatedTaskCard extends StatelessWidget {
           // Staff icon
           CircleAvatar(
             radius: 14,
-            backgroundColor: isCompleted ? Colors.green.withOpacity(0.2) : Colors.blue.withOpacity(0.2),
+            backgroundColor: isCompleted ? Colors.green.withValues(alpha: 0.2) : Colors.blue.withValues(alpha: 0.2),
             child: Icon(
               isCompleted ? BootstrapIcons.check : BootstrapIcons.person,
               color: isCompleted ? Colors.green : Colors.blue,
@@ -211,7 +211,7 @@ class ConsolidatedTaskCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: isCompleted ? Colors.green.withOpacity(0.1) : Colors.blue.withOpacity(0.1),
+              color: isCompleted ? Colors.green.withValues(alpha: 0.1) : Colors.blue.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(

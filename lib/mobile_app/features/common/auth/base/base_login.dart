@@ -9,6 +9,7 @@ class BaseLoginPage extends StatefulWidget {
   final bool showSignup;
   final String? signupRoute; 
   final String homeRoute;
+  final String? expectedRole;
 
   const BaseLoginPage({
     super.key,
@@ -16,6 +17,7 @@ class BaseLoginPage extends StatefulWidget {
     required this.homeRoute,
     this.showSignup = false,
     this.signupRoute,
+    this.expectedRole,
   });
 
   @override
@@ -45,6 +47,7 @@ class _BaseLoginPageState extends State<BaseLoginPage> {
       await _controller.login(
         email: _emailCtrl.text,
         password: _passCtrl.text,
+        expectedRole: widget.expectedRole,
       );
       if (!mounted) return;
       context.go(widget.homeRoute);

@@ -9,8 +9,9 @@ class MobileLoginController {
   Future<void> login({
     required String email,
     required String password,
+    String? expectedRole,
   }) async {
-    await _service.signIn(email: email, password: password);
+    await _service.signIn(email: email, password: password, expectedRole: expectedRole);
   }
 
   Future<void> sendResetLink(String email) async {

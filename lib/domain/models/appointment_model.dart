@@ -20,9 +20,11 @@ class AppointmentModel {
   final String status;
   final String? assignedStaffID;
   final String? notes;
+  final String? warranty;
   final double totalPrice;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool isBranchSwap;
 
   AppointmentModel({
     required this.appointmentID,
@@ -44,9 +46,11 @@ class AppointmentModel {
     required this.status,
     this.assignedStaffID,
     this.notes,
+    this.warranty,
     required this.totalPrice,
     required this.createdAt,
     required this.updatedAt,
+    this.isBranchSwap = false,
   });
 
   String get id => appointmentID;
@@ -173,9 +177,11 @@ class AppointmentModel {
       status: data['status'] ?? 'pending',
       assignedStaffID: data['assignedStaffID'],
       notes: data['notes'],
+      warranty: data['warranty'],
       totalPrice: (data['totalPrice'] ?? 0.0).toDouble(),
       createdAt: createdAt,
       updatedAt: updatedAt,
+      isBranchSwap: data['isBranchSwap'] ?? false,
     );
     
     print('✅ Appointment parsed successfully: ${model.customerName}');
@@ -204,9 +210,11 @@ class AppointmentModel {
       'status': status,
       'assignedStaffID': assignedStaffID,
       'notes': notes,
+      'warranty': warranty,
       'totalPrice': totalPrice,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
+      if (isBranchSwap) 'isBranchSwap': true,
     };
   }
 
@@ -230,9 +238,11 @@ class AppointmentModel {
     String? status,
     String? assignedStaffID,
     String? notes,
+    String? warranty,
     double? totalPrice,
     DateTime? createdAt,
     DateTime? updatedAt,
+    bool? isBranchSwap,
   }) {
     return AppointmentModel(
       appointmentID: appointmentID ?? this.appointmentID,
@@ -254,9 +264,11 @@ class AppointmentModel {
       status: status ?? this.status,
       assignedStaffID: assignedStaffID ?? this.assignedStaffID,
       notes: notes ?? this.notes,
+      warranty: warranty ?? this.warranty,
       totalPrice: totalPrice ?? this.totalPrice,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isBranchSwap: isBranchSwap ?? this.isBranchSwap,
     );
   }
 }

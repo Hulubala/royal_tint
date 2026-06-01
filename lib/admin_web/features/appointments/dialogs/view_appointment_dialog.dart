@@ -7,12 +7,14 @@ import 'package:royal_tint/core/constants/tint_constants.dart';
 class ViewAppointmentDialog extends StatelessWidget {
   final AppointmentModel appointment;
   final Function(AppointmentModel) onEdit;
+  final Function(AppointmentModel) onChangeStatus;
   final VoidCallback onRefresh;
 
   const ViewAppointmentDialog({
     super.key,
     required this.appointment,
     required this.onEdit,
+    required this.onChangeStatus,
     required this.onRefresh,
   });
 
@@ -149,11 +151,6 @@ class ViewAppointmentDialog extends StatelessWidget {
                   const SizedBox(width: 12),
                   const Text('APPOINTMENT DETAILS',
                       style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold, fontSize: 18)),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: Color(0xFFFFD700)),
-                  ),
                 ],
               ),
             ),
@@ -198,6 +195,10 @@ class ViewAppointmentDialog extends StatelessWidget {
                         'FINISH SERVICE TIME:',
                         DateFormat('MMM dd, yyyy hh:mm a').format(appointment.updatedAt),
                       ),
+                      if (appointment.warranty != null && appointment.warranty!.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        _buildViewRow('WARRANTY (YEARS):', appointment.warranty!.replaceAll(RegExp(r'\s*years?', caseSensitive: false), '').trim()),
+                      ],
                     ],
 
                     const SizedBox(height: 24),
@@ -235,21 +236,44 @@ class ViewAppointmentDialog extends StatelessWidget {
                     ),
                     child: const Text('CLOSE', style: TextStyle(fontWeight: FontWeight.bold)),
                   ),
-                  if (!isCompleted && !isInProgress)
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        onEdit(appointment);
-                      },
-                      icon: const Icon(BootstrapIcons.pencil),
-                      label: const Text('EDIT APPOINTMENT', style: TextStyle(fontWeight: FontWeight.bold)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFD700),
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (!isCompleted)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              onChangeStatus(appointment);
+                            },
+                            icon: const Icon(BootstrapIcons.check_circle),
+                            label: const Text('STATUS', style: TextStyle(fontWeight: FontWeight.bold)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF198754),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            ),
+                          ),
+                        ),
+                      if (!isCompleted && !isInProgress)
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            onEdit(appointment);
+                          },
+                          icon: const Icon(BootstrapIcons.pencil),
+                          label: const Text('EDIT', style: TextStyle(fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFD700),
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                    ],
+                  ),
                 ],
               ),
             ),

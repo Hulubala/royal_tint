@@ -17,9 +17,11 @@ class StaffTasksProvider extends ChangeNotifier {
 
   List<StaffMember> staff = [];
   List<AppointmentItem> appointments = [];
+  List<TaskItem> activeTasks = [];
 
   Stream<List<StaffMember>>? staffStream;
   Stream<List<TaskItem>>? activeTasksStream;
+  StreamSubscription<List<TaskItem>>? _activeTasksSubscription;
 
   Future<void> load({
     required String branchID,
@@ -32,6 +34,12 @@ class StaffTasksProvider extends ChangeNotifier {
       staffStream = _service.streamActiveStaff(branchID);
       appointments = await _service.fetchAssignableAppointments(branchID);
       activeTasksStream = _service.streamActiveTasks(branchID);
+      
+      _activeTasksSubscription?.cancel();
+      _activeTasksSubscription = activeTasksStream!.listen((tasks) {
+        activeTasks = tasks;
+        notifyListeners();
+      });
     } catch (e) {
       error = e.toString();
     } finally {
@@ -107,5 +115,11 @@ class StaffTasksProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint("Error deleting task: $e");
     }
+  }
+
+  @override
+  void dispose() {
+    _activeTasksSubscription?.cancel();
+    super.dispose();
   }
 }

@@ -3,6 +3,7 @@ import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:royal_tint/domain/models/appointment_model.dart';
 import 'package:royal_tint/admin_web/features/appointments/providers/appointment_provider.dart';
 import 'package:royal_tint/admin_web/features/appointments/controllers/appointment_controller.dart';
+import 'package:royal_tint/data/services/notification_service.dart';
 
 class ChangeStatusDialog extends StatefulWidget {
   final AppointmentModel appointment;
@@ -174,6 +175,21 @@ class _ChangeStatusDialogState extends State<ChangeStatusDialog> {
             backgroundColor: const Color(0xFF4CAF50),
           ),
         );
+
+        // Clear manager notification if appointment is confirmed/changed
+        await NotificationService().markNotificationsAsReadForAppointment(widget.appointment.appointmentID);
+
+        // Auto-notify customer about status change
+        if (widget.appointment.customerID.isNotEmpty &&
+            !widget.appointment.customerID.startsWith('GUEST_')) {
+          NotificationService().notifyCustomerStatusChange(
+            customerID: widget.appointment.customerID,
+            newStatus: newStatus,
+            appointmentDate: widget.appointment.appointmentDate,
+            appointmentTime: widget.appointment.appointmentTime,
+            appointmentID: widget.appointment.appointmentID,
+          );
+        }
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -232,13 +248,6 @@ class _ChangeStatusDialogState extends State<ChangeStatusDialog> {
                   const Text(
                     'Change Status',
                     style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Color(0xFFFFD700)),
-                    onPressed: () => Navigator.pop(context),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
                   ),
                 ],
               ),

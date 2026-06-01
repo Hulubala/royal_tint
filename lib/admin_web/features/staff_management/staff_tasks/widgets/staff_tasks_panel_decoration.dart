@@ -15,7 +15,7 @@ BoxDecoration staffTasksPanelDecoration() {
     border: Border.all(color: const Color(0xFFFFD700), width: 2),
     boxShadow: [
       BoxShadow(
-        color: Colors.black.withOpacity(0.20),
+        color: Colors.black.withValues(alpha: 0.20),
         blurRadius: 18,
         offset: const Offset(0, 10),
       ),

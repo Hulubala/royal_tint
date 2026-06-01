@@ -100,7 +100,7 @@ class StaffHeader extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
-                    color: _gold.withOpacity(0.1),
+                    color: _gold.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: _gold, width: 1.5),
                   ),

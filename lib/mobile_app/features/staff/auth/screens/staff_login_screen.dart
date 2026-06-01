@@ -10,6 +10,7 @@ class StaffLoginScreen extends StatelessWidget {
       title: 'Staff Login',
       homeRoute: '/staff/home',
       showSignup: false,
+      expectedRole: 'staff',
     );
   }
 }

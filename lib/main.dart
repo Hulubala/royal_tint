@@ -23,6 +23,8 @@ import 'package:royal_tint/admin_web/features/appointments/providers/appointment
 import 'package:royal_tint/admin_web/features/staff_management/register_staff/providers/staff_registration_provider.dart';
 import 'package:royal_tint/admin_web/features/staff_management/staff_tasks/providers/staff_tasks_provider.dart';
 import 'package:royal_tint/admin_web/features/profiles/providers/profile_provider.dart';
+import 'package:royal_tint/admin_web/features/feedback/providers/feedback_provider.dart';
+import 'package:royal_tint/admin_web/features/sales_reports/providers/sales_report_provider.dart';
 enum AppTarget { adminWeb, mobileApp }
 
 AppTarget _resolveAppTarget() {
@@ -91,6 +93,8 @@ class MyApp extends StatefulWidget {
           ChangeNotifierProvider(create: (_) => StaffRegistrationProvider()),
           ChangeNotifierProvider(create: (_) => StaffTasksProvider()),
           ChangeNotifierProvider(create: (_) => ProfileProvider()),
+          ChangeNotifierProvider(create: (_) => FeedbackProvider()),
+          ChangeNotifierProvider(create: (_) => SalesReportProvider()),
         ],
         child: Builder(
           builder: (context) {

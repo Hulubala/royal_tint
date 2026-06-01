@@ -72,7 +72,7 @@ class TaskCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF0F0F0F),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFFFC107).withOpacity(0.5), width: 1.5),
+        border: Border.all(color: const Color(0xFFFFC107).withValues(alpha: 0.5), width: 1.5),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,9 +139,9 @@ class TaskCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: sc.withOpacity(0.15),
+                  color: sc.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: sc.withOpacity(0.35)),
+                  border: Border.all(color: sc.withValues(alpha: 0.35)),
                 ),
                 child: Text(
                   task.status,
@@ -206,7 +206,7 @@ class TaskCard extends StatelessWidget {
         backgroundColor: const Color(0xFF1A1A1A),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
-          side: BorderSide(color: const Color(0xFFFFD700).withOpacity(0.15)),
+          side: BorderSide(color: const Color(0xFFFFD700).withValues(alpha: 0.15)),
         ),
         title: const Text('Delete Task', style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold)),
         content: const Text(

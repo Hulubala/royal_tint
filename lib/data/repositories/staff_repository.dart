@@ -66,10 +66,22 @@ class StaffRepository {
 
   Future<String?> sendPasswordResetEmail(String email) async {
     try {
-      await _auth.sendPasswordResetEmail(email: email);
+      await _auth.sendPasswordResetEmail(
+        email: email,
+        actionCodeSettings: ActionCodeSettings(
+          url: 'http://localhost:60512/#/reset-password?role=staff',
+          handleCodeInApp: false,
+        ),
+      );
       return null;
     } on FirebaseAuthException catch (e) {
-      return e.message ?? e.code;
+      // Fallback in case localhost port or domain settings throw unauthorized-continue-uri
+      try {
+        await _auth.sendPasswordResetEmail(email: email);
+        return null;
+      } catch (_) {
+        return e.message ?? e.code;
+      }
     } catch (e) {
       return e.toString();
     }

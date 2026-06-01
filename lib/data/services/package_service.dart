@@ -13,9 +13,13 @@ class PackageService {
           .where('isActive', isEqualTo: true)
           .get();
 
-      return querySnapshot.docs
+      final packages = querySnapshot.docs
           .map((doc) => TintPackageModel.fromFirestore(doc))
           .toList();
+      
+      packages.sort((a, b) => a.packageName.compareTo(b.packageName));
+      
+      return packages;
     } catch (e) {
       print('❌ Error fetching packages: $e');
       return [];
@@ -75,5 +79,38 @@ class PackageService {
   /// Get duration for vehicle type
   int getDuration(TintPackageModel package, String vehicleType) {
     return package.getDurationForVehicle(vehicleType);
+  }
+
+  /// Add a new package
+  Future<void> addPackage(TintPackageModel package) async {
+    try {
+      final docRef = _firestore.collection('packages').doc();
+      final data = package.toFirestore();
+      data['packageID'] = docRef.id; // ensure ID is set
+      await docRef.set(data);
+    } catch (e) {
+      print('❌ Error adding package: $e');
+      rethrow;
+    }
+  }
+
+  /// Update an existing package
+  Future<void> updatePackage(TintPackageModel package) async {
+    try {
+      await _firestore.collection('packages').doc(package.packageID).update(package.toFirestore());
+    } catch (e) {
+      print('❌ Error updating package: $e');
+      rethrow;
+    }
+  }
+
+  /// Delete a package
+  Future<void> deletePackage(String packageId) async {
+    try {
+      await _firestore.collection('packages').doc(packageId).delete();
+    } catch (e) {
+      print('❌ Error deleting package: $e');
+      rethrow;
+    }
   }
 }

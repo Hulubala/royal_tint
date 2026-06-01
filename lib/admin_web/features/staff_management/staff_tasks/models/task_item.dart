@@ -18,6 +18,9 @@ class TaskItem {
   final String? carModel;
   final String? darkness; 
   final bool isFinalized;
+  final String? appointmentDate;
+  final String? appointmentTime;
+  final int? estimatedDuration;
 
   TaskItem({
     required this.id,
@@ -37,16 +40,19 @@ class TaskItem {
     required this.carModel,
     required this.darkness,
     this.isFinalized = false,
+    this.appointmentDate,
+    this.appointmentTime,
+    this.estimatedDuration,
   });
 
   factory TaskItem.fromMap(String id, Map<String, dynamic> map) {
     final rawSection = map['mirrorSection'];
-      List<String> sections = [];
-      if (rawSection is List) {
-        sections = List<String>.from(rawSection);
-      } else if (rawSection is String && rawSection.isNotEmpty) {
-        sections = rawSection.split(',').map((e) => e.trim()).toList();
-      }
+    List<String> sections = [];
+    if (rawSection is List) {
+      sections = List<String>.from(rawSection);
+    } else if (rawSection is String && rawSection.isNotEmpty) {
+      sections = rawSection.split(',').map((e) => e.trim()).toList();
+    }
     
     return TaskItem(
       id: id,
@@ -68,6 +74,9 @@ class TaskItem {
       carModel: (map['carModel'] as String?)?.trim(),
       darkness: (map['darkness'] as String?)?.trim(),
       isFinalized: (map['isFinalized'] ?? false) as bool,
+      appointmentDate: map['appointmentDate'] as String?,
+      appointmentTime: map['appointmentTime'] as String?,
+      estimatedDuration: map['estimatedDuration'] as int?,
     );
   }
 }

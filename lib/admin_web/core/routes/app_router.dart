@@ -10,6 +10,14 @@ import 'package:royal_tint/admin_web/features/staff_management/register_staff/sc
 import 'package:royal_tint/admin_web/features/staff_management/staff_tasks/screens/staff_tasks_screen.dart';
 import 'package:royal_tint/admin_web/features/profiles/screens/profile_screen.dart';
 import 'package:royal_tint/admin_web/features/auth/screens/login_screen.dart';
+import 'package:royal_tint/admin_web/features/auth/screens/reset_password_screen.dart';
+import 'package:royal_tint/admin_web/features/staff_management/staff_list/screens/staff_list_screen.dart';
+import 'package:royal_tint/admin_web/features/staff_management/staff_list/screens/staff_schedule_screen.dart';
+import 'package:royal_tint/admin_web/features/feedback/screens/feedback_management_screen.dart';
+import 'package:royal_tint/admin_web/features/packages/screens/tinted_basic_info_screen.dart';
+import 'package:royal_tint/admin_web/features/packages/screens/film_specification_screen.dart';
+import 'package:royal_tint/admin_web/features/packages/screens/edit_package_screen.dart';
+import 'package:royal_tint/admin_web/features/sales_reports/screens/sales_reports_screen.dart';
 
 /// Admin Web router (manager portal).
 
@@ -29,9 +37,10 @@ class AdminWebAppRouter {
         }
 
         final isAuthenticated = authProvider.isAuthenticated;
-        final isLoggingIn = state.uri.toString() == '/manager/login';
+        final isLoggingIn = state.uri.path == '/manager/login';
+        final isResetPassword = state.uri.path == '/reset-password';
 
-        if (!isAuthenticated && !isLoggingIn) {
+        if (!isAuthenticated && !isLoggingIn && !isResetPassword) {
           return '/manager/login';
         }
 
@@ -53,6 +62,19 @@ class AdminWebAppRouter {
         ),
 
         // ============================================
+        // CUSTOM PASSWORD RESET PAGE
+        // ============================================
+        GoRoute(
+          path: '/reset-password',
+          name: 'reset-password',
+          builder: (context, state) {
+            // Firebase passes the oobCode via query parameters when a user clicks the link
+            final oobCode = state.uri.queryParameters['oobCode'] ?? '';
+            return ResetPasswordScreen(oobCode: oobCode);
+          },
+        ),
+
+        // ============================================
         // MANAGER DASHBOARD
         // ============================================
         GoRoute(
@@ -69,36 +91,33 @@ class AdminWebAppRouter {
         GoRoute(
           path: '/manager/appointments',
           name: 'appointments',
+          builder: (context, state) {
+            final id = state.uri.queryParameters['id'];
+            return ManagerLayout(
+              child: AppointmentManagementScreen(highlightAppointmentId: id),
+            );
+          },
+        ),
+
+        // ============================================
+        // PRODUCT MANAGEMENT - TINTED BASIC INFO
+        // ============================================
+        GoRoute(
+          path: '/manager/tinted-basic-info',
+          name: 'tinted-basic-info',
           builder: (context, state) => const ManagerLayout(
-            child: AppointmentManagementScreen(),
+            child: TintedBasicInfoScreen(),
           ),
         ),
 
         // ============================================
-        // PRODUCT MANAGEMENT - PRODUCT CODE
+        // PRODUCT MANAGEMENT - FILM SPECIFICATION
         // ============================================
         GoRoute(
-          path: '/manager/product-code',
-          name: 'product-code',
+          path: '/manager/film-specification',
+          name: 'film-specification',
           builder: (context, state) => const ManagerLayout(
-            child: _PlaceholderPage(
-              title: 'Product Code',
-              icon: BootstrapIcons.qr_code,
-            ),
-          ),
-        ),
-
-        // ============================================
-        // PRODUCT MANAGEMENT - STOCK CUT FILM
-        // ============================================
-        GoRoute(
-          path: '/manager/stock-cut-film',
-          name: 'stock-cut-film',
-          builder: (context, state) => const ManagerLayout(
-            child: _PlaceholderPage(
-              title: 'Stock Cut Film',
-              icon: BootstrapIcons.box_seam,
-            ),
+            child: FilmSpecificationScreen(),
           ),
         ),
 
@@ -109,11 +128,33 @@ class AdminWebAppRouter {
           path: '/manager/edit-package',
           name: 'edit-package',
           builder: (context, state) => const ManagerLayout(
-            child: _PlaceholderPage(
-              title: 'Edit Package',
-              icon: BootstrapIcons.pencil_square,
-            ),
+            child: EditPackageScreen(),
           ),
+        ),
+
+        // ============================================
+        // STAFF MANAGEMENT - STAFF LIST
+        // ============================================
+        GoRoute(
+          path: '/manager/staff-list',
+          name: 'staff-list',
+          builder: (context, state) => const ManagerLayout(
+            child: StaffListScreen(),
+          ),
+        ),
+
+        // ============================================
+        // STAFF MANAGEMENT - STAFF SCHEDULE
+        // ============================================
+        GoRoute(
+          path: '/manager/staff-schedule/:id',
+          name: 'staff-schedule',
+          builder: (context, state) {
+            final id = state.pathParameters['id'] ?? '';
+            return ManagerLayout(
+              child: StaffScheduleScreen(staffId: id),
+            );
+          },
         ),
 
         // ============================================
@@ -139,30 +180,13 @@ class AdminWebAppRouter {
         ),
 
         // ============================================
-        // SERVICE HISTORY
-        // ============================================
-        GoRoute(
-          path: '/manager/service-history',
-          name: 'service-history',
-          builder: (context, state) => const ManagerLayout(
-            child: _PlaceholderPage(
-              title: 'Service History',
-              icon: BootstrapIcons.clock_history,
-            ),
-          ),
-        ),
-
-        // ============================================
         // SALES & REPORTS
         // ============================================
         GoRoute(
           path: '/manager/sales-reports',
           name: 'sales-reports',
           builder: (context, state) => const ManagerLayout(
-            child: _PlaceholderPage(
-              title: 'Sales & Reports',
-              icon: BootstrapIcons.bar_chart_fill,
-            ),
+            child: SalesReportsScreen(),
           ),
         ),
 
@@ -173,10 +197,7 @@ class AdminWebAppRouter {
           path: '/manager/feedback',
           name: 'feedback',
           builder: (context, state) => const ManagerLayout(
-            child: _PlaceholderPage(
-              title: 'Customer Feedbacks',
-              icon: BootstrapIcons.star_fill,
-            ),
+            child: FeedbackManagementScreen(),
           ),
         ),
 

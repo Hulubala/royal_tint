@@ -48,8 +48,8 @@ class _ManagerSidebarState extends State<ManagerSidebar> {
                   label: 'Product Management',
                   submenuKey: 'product',
                   submenuItems: [
-                    {'label': 'Product Code', 'route': '/manager/product-code'},
-                    {'label': 'Stock Cut Film', 'route': '/manager/stock-cut-film'},
+                    {'label': 'Tinted Basic Info', 'route': '/manager/tinted-basic-info'},
+                    {'label': 'Film Specification', 'route': '/manager/film-specification'},
                     {'label': 'Edit Package', 'route': '/manager/edit-package'},
                   ],
                 ),
@@ -64,23 +64,19 @@ class _ManagerSidebarState extends State<ManagerSidebar> {
                   submenuKey: 'staff',
                   submenuItems: [
                     {'label': 'Register New Staff', 'route': '/manager/staff-registration'},
+                    {'label': 'Staff List', 'route': '/manager/staff-list'},
                     {'label': 'Staff Tasks', 'route': '/manager/staff-tasks'},
                   ],
-                ),
-                _buildMenuItem(
-                  icon: BootstrapIcons.clock_history,
-                  label: 'Service History',
-                  route: '/manager/service-history',
-                ),
-                _buildMenuItem(
-                  icon: BootstrapIcons.graph_up,
-                  label: 'Sales & Reports',
-                  route: '/manager/sales-reports',
                 ),
                 _buildMenuItem(
                   icon: BootstrapIcons.star_fill,
                   label: 'Customer Feedbacks',
                   route: '/manager/feedback',
+                ),
+                _buildMenuItem(
+                  icon: BootstrapIcons.graph_up,
+                  label: 'Sales & Reports',
+                  route: '/manager/sales-reports',
                 ),
               ],
             ),
@@ -235,7 +231,7 @@ class _ManagerSidebarState extends State<ManagerSidebar> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
               decoration: BoxDecoration(
-                color: hasActiveSubmenu ? const Color(0xFFFFD700).withOpacity(0.1) : Colors.transparent,
+                color: hasActiveSubmenu ? const Color(0xFFFFD700).withValues(alpha: 0.1) : Colors.transparent,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -270,7 +266,7 @@ class _ManagerSidebarState extends State<ManagerSidebar> {
             curve: Curves.easeInOut,
             child: isExpanded ? Container(
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.6),
+                color: Colors.black.withValues(alpha: 0.6),
               ),
               child: Column(
                 children: submenuItems.map((item) {
@@ -333,7 +329,7 @@ class _ManagerSidebarState extends State<ManagerSidebar> {
               border: Border.all(color: Colors.black, width: 2),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:royal_tint/domain/models/appointment_model.dart';
 
@@ -6,6 +7,7 @@ class AppointmentProvider extends ChangeNotifier {
   List<AppointmentModel> _appointments = [];
   bool _isLoading = false;
   String? _error;
+  StreamSubscription<List<AppointmentModel>>? _subscription;
 
   // filters
   String _selectedType = 'all';     // all / walk-in / scheduled
@@ -33,6 +35,17 @@ class AppointmentProvider extends ChangeNotifier {
   void setLoading(bool v) { _isLoading = v; notifyListeners(); }
   void setError(String? v) { _error = v; notifyListeners(); }
   void setAppointments(List<AppointmentModel> v) { _appointments = v; notifyListeners(); }
+
+  void setSubscription(StreamSubscription<List<AppointmentModel>> sub) {
+    _subscription?.cancel();
+    _subscription = sub;
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
+  }
 
   // setters (filters)
   void setSelectedType(String v) { _selectedType = v; notifyListeners(); }
@@ -73,10 +86,20 @@ class AppointmentProvider extends ChangeNotifier {
       // search
       if (_searchQuery.isNotEmpty) {
         final q = _searchQuery.toLowerCase();
-        final matches = apt.customerName.toLowerCase().contains(q) ||
+        final qNumeric = _searchQuery.replaceAll(RegExp(r'[^0-9]'), '');
+        
+        bool matches = apt.customerName.toLowerCase().contains(q) ||
             apt.vehiclePlate.toLowerCase().contains(q) ||
-            apt.vehicleModel.toLowerCase().contains(q) ||
-            (apt.customerPhone?.toLowerCase().contains(q) ?? false);
+            apt.vehicleModel.toLowerCase().contains(q);
+            
+        if (!matches && apt.customerPhone != null) {
+          final phoneNumeric = apt.customerPhone!.replaceAll(RegExp(r'[^0-9]'), '');
+          if (qNumeric.isNotEmpty && phoneNumeric.contains(qNumeric)) {
+            matches = true;
+          } else {
+            matches = apt.customerPhone!.toLowerCase().contains(q);
+          }
+        }
 
         if (!matches) return false;
       }

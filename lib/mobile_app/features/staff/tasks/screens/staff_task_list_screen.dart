@@ -112,7 +112,7 @@ class _TaskCard extends StatelessWidget {
           border: Border.all(color: _gold, width: 2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -138,9 +138,9 @@ class _TaskCard extends StatelessWidget {
                       width: 52,
                       height: 52,
                       decoration: BoxDecoration(
-                        color: _gold.withOpacity(0.1),
+                        color: _gold.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _gold.withOpacity(0.5), width: 1.5),
+                        border: Border.all(color: _gold.withValues(alpha: 0.5), width: 1.5),
                       ),
                       child: const Icon(Icons.directions_car_filled_rounded, color: _gold, size: 28),
                     ),
@@ -178,16 +178,16 @@ class _TaskCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
-                  border: Border(top: BorderSide(color: Colors.white.withOpacity(0.1))),
+                  color: Colors.white.withValues(alpha: 0.05),
+                  border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
                 ),
                 child: Row(
                   children: [
                     _StatusBadge(label: statusLabel, color: statusColor),
                     const Spacer(),
-                    Text('View Details', style: TextStyle(color: _gold.withOpacity(0.7), fontSize: 12, fontWeight: FontWeight.bold)),
+                    Text('View Details', style: TextStyle(color: _gold.withValues(alpha: 0.7), fontSize: 12, fontWeight: FontWeight.bold)),
                     const SizedBox(width: 4),
-                    Icon(Icons.chevron_right_rounded, color: _gold.withOpacity(0.7), size: 18),
+                    Icon(Icons.chevron_right_rounded, color: _gold.withValues(alpha: 0.7), size: 18),
                   ],
                 ),
               ),
@@ -239,9 +239,9 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(
         label,

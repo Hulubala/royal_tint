@@ -38,7 +38,7 @@ class _StaffMainScreenState extends State<StaffMainScreen> {
           onTap: (index) => setState(() => _selectedIndex = index),
           backgroundColor: Colors.black,
           selectedItemColor: const Color(0xFFFFD700),
-          unselectedItemColor: const Color(0xFFFFD700).withOpacity(0.4),
+          unselectedItemColor: const Color(0xFFFFD700).withValues(alpha: 0.4),
           selectedFontSize: 12,
           unselectedFontSize: 12,
           type: BottomNavigationBarType.fixed,

@@ -1,6 +1,7 @@
 // lib/admin_web/features/profiles/screens/profile_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:royal_tint/admin_web/features/auth/providers/auth_provider.dart';
 import 'package:royal_tint/admin_web/features/profiles/providers/profile_provider.dart';
 import 'package:royal_tint/admin_web/features/profiles/widgets/profile_header_panel.dart';
 import 'package:royal_tint/admin_web/features/profiles/widgets/account_settings_panel.dart';
@@ -20,7 +21,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_loaded) {
+    final authProvider = context.watch<AuthProvider>();
+    if (!_loaded && authProvider.isAuthenticated) {
       _loaded = true;
       Future.microtask(() => context.read<ProfileProvider>().load());
     }

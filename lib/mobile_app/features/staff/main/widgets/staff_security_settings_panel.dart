@@ -44,7 +44,7 @@ class _StaffSecuritySettingsPanelState extends State<StaffSecuritySettingsPanel>
       decoration: BoxDecoration(
         color: Colors.black,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: gold.withOpacity(0.3)),
+        border: Border.all(color: gold.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -59,8 +59,8 @@ class _StaffSecuritySettingsPanelState extends State<StaffSecuritySettingsPanel>
           const SizedBox(height: 16),
           
           Text(
-            'Reset your password by sending a secure link to your registered email address.',
-            style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14),
+            'Forgot your password? Reset your password by sending a secure link to your registered email address.',
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14),
           ),
           const SizedBox(height: 16),
           
@@ -74,7 +74,7 @@ class _StaffSecuritySettingsPanelState extends State<StaffSecuritySettingsPanel>
               label: Text(_isSending ? 'Sending...' : 'Send Reset Link to Email'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: gold,
-                side: BorderSide(color: gold.withOpacity(0.5)),
+                side: BorderSide(color: gold.withValues(alpha: 0.5)),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),

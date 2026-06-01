@@ -11,6 +11,7 @@ class CustomerLoginScreen extends StatelessWidget {
       homeRoute: '/customer/home',
       showSignup: true,
       signupRoute: '/customer/register',
+      expectedRole: 'customer',
     );
   }
 }

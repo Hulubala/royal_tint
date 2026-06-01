@@ -157,7 +157,10 @@ class TintPackageModel {
   /// Get all darkness options as formatted string
   String get darknessOptionsText {
     if (darknessOptions.isEmpty) return 'N/A';
-    return darknessOptions.join(', ');
+    return darknessOptions
+        .map((e) => e.replaceAll(RegExp(r'[^0-9]'), ''))
+        .where((e) => e.isNotEmpty)
+        .join(', ');
   }
 
   /// Get free items as formatted string

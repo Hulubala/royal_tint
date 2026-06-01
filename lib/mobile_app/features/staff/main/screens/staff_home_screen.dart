@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:royal_tint/data/repositories/staff_repository.dart';
 import 'package:royal_tint/data/repositories/staff_task_repository.dart';
-import 'package:royal_tint/domain/models/user/staff_model.dart';
 import 'package:royal_tint/mobile_app/features/staff/tasks/models/staff_task_model.dart';
 import 'package:royal_tint/mobile_app/features/staff/main/widgets/staff_header.dart';
-import 'package:royal_tint/core/constants/tint_constants.dart';
 
 class StaffHomeScreen extends StatefulWidget {
   const StaffHomeScreen({super.key});
@@ -56,7 +54,7 @@ class _StaffHomeScreenState extends State<StaffHomeScreen> {
                   border: Border.all(color: _gold, width: 2),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.15),
+                      color: Colors.black.withValues(alpha: 0.15),
                       blurRadius: 15,
                       offset: const Offset(0, 8),
                     ),
@@ -153,10 +151,10 @@ class _QuickActionCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFF1A1400),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: _gold.withOpacity(0.35), width: 1.5),
+          border: Border.all(color: _gold.withValues(alpha: 0.35), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: _gold.withOpacity(0.08),
+              color: _gold.withValues(alpha: 0.08),
               blurRadius: 12,
               spreadRadius: 0,
             ),
@@ -167,7 +165,7 @@ class _QuickActionCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: _gold.withOpacity(0.15),
+                color: _gold.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: _gold, size: 22),
@@ -194,7 +192,7 @@ class _QuickActionCard extends StatelessWidget {
               ),
             ),
             Icon(Icons.arrow_forward_ios_rounded,
-                color: _gold.withOpacity(0.6), size: 16),
+                color: _gold.withValues(alpha: 0.6), size: 16),
           ],
         ),
       ),
@@ -264,10 +262,10 @@ class _TodayTaskCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: _card,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: _gold.withOpacity(0.4), width: 1.5),
+          border: Border.all(color: _gold.withValues(alpha: 0.4), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
@@ -287,7 +285,7 @@ class _TodayTaskCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: _gold.withOpacity(0.1),
+                  color: _gold.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(Icons.directions_car_rounded, color: _gold, size: 24),
@@ -319,9 +317,9 @@ class _TodayTaskCard extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.12),
+                    color: statusColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: statusColor.withOpacity(0.3)),
+                    border: Border.all(color: statusColor.withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     statusLabel.toUpperCase(),
@@ -404,9 +402,9 @@ class _ErrorTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.red.withOpacity(0.08),
+        color: Colors.red.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red.withOpacity(0.3)),
+        border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

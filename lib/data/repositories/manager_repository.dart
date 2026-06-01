@@ -166,6 +166,16 @@ class ManagerRepository {
 
   /// Reset manager password
   Future<void> resetManagerPassword(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(
+        email: email,
+        actionCodeSettings: ActionCodeSettings(
+          url: 'http://localhost:60512/#/reset-password?role=manager',
+          handleCodeInApp: false,
+        ),
+      );
+    } catch (_) {
       await _auth.sendPasswordResetEmail(email: email);
+    }
   }
 }

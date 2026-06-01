@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:bootstrap_icons/bootstrap_icons.dart';
-import 'package:intl/intl.dart';
 import 'package:royal_tint/domain/models/appointment_model.dart';
 import 'package:royal_tint/admin_web/features/auth/providers/auth_provider.dart';
 import 'package:royal_tint/admin_web/features/appointments/providers/appointment_provider.dart';
 import 'package:royal_tint/admin_web/features/appointments/controllers/appointment_controller.dart';
 import 'package:royal_tint/admin_web/features/appointments/dialogs/edit_appointment_dialog.dart';
 import 'package:royal_tint/admin_web/features/appointments/dialogs/new_appointment_dialog.dart';
-import 'package:royal_tint/admin_web/features/appointments/widgets/appointment_card.dart';
 import 'package:royal_tint/admin_web/features/appointments/widgets/appointment_calendar_view.dart';
 import 'package:royal_tint/admin_web/features/appointments/widgets/appointment_filters.dart';
 import 'package:royal_tint/admin_web/features/appointments/widgets/appointment_stats_row.dart';
@@ -16,9 +14,13 @@ import 'package:royal_tint/admin_web/features/appointments/widgets/appointment_t
 import 'package:royal_tint/admin_web/features/appointments/dialogs/view_appointment_dialog.dart';
 import 'package:royal_tint/admin_web/features/appointments/dialogs/change_status_dialog.dart';
 import 'package:royal_tint/admin_web/features/appointments/dialogs/delete_appointment_dialog.dart';
+import 'package:royal_tint/admin_web/features/appointments/widgets/appointment_management_header.dart';
+import 'package:royal_tint/admin_web/features/appointments/widgets/appointments_grid.dart';
 
 class AppointmentManagementScreen extends StatefulWidget {
-  const AppointmentManagementScreen({super.key});
+  final String? highlightAppointmentId;
+
+  const AppointmentManagementScreen({super.key, this.highlightAppointmentId});
 
   @override
   State<AppointmentManagementScreen> createState() =>
@@ -32,14 +34,43 @@ class _AppointmentManagementScreenState
     DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
 
   final AppointmentController _controller = AppointmentController();
+  bool _hasHighlighted = false;
+  bool _initialized = false;
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final authProvider = context.watch<AuthProvider>();
+    if (!_initialized && authProvider.isAuthenticated) {
+      _loadData();
+      _initialized = true;
+    }
+  }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _refreshAppointments();
-    });
+  @override
+  void didUpdateWidget(AppointmentManagementScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.highlightAppointmentId != oldWidget.highlightAppointmentId) {
+      _hasHighlighted = false;
+    }
+  }
+
+  void _checkHighlight() {
+    if (widget.highlightAppointmentId != null && !_hasHighlighted) {
+      _hasHighlighted = true;
+      final provider = context.read<AppointmentProvider>();
+      try {
+        final target = provider.appointments.firstWhere(
+          (a) => a.appointmentID == widget.highlightAppointmentId,
+        );
+        _viewAppointment(target);
+      } catch (_) {}
+    }
+  }
+
+  Future<void> _loadData() async {
+    await _refreshAppointments();
+    _checkHighlight();
   }
 
   Future<void> _refreshAppointments() async {
@@ -50,6 +81,7 @@ class _AppointmentManagementScreenState
       context.read<AppointmentProvider>(),
       branchID: branchID,
     );
+    _checkHighlight();
   }
 
   bool _isSameDay(DateTime a, DateTime b) =>
@@ -57,44 +89,23 @@ class _AppointmentManagementScreenState
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'pending':
-        return const Color(0xFFFFC107); // Amber
-      case 'confirmed':
-        return const Color(0xFF00BCD4); // Cyan
-      case 'in-progress':
-        return const Color(0xFF2196F3); // Blue
-      case 'completed':
-        return const Color(0xFF4CAF50); // Green
-      case 'cancelled':
-        return const Color(0xFFF44336); // Red
-      default:
-        return Colors.grey;
+      case 'pending': return const Color(0xFFFFC107);
+      case 'confirmed': return const Color(0xFF00BCD4);
+      case 'in-progress': return const Color(0xFF2196F3);
+      case 'completed': return const Color(0xFF4CAF50);
+      case 'cancelled': return const Color(0xFFF44336);
+      default: return Colors.grey;
     }
   }
 
   IconData _getStatusIcon(String status) {
     switch (status.toLowerCase()) {
-      case 'pending':
-        return BootstrapIcons.clock;
-      case 'confirmed':
-        return BootstrapIcons.check_circle;
-      case 'completed':
-        return BootstrapIcons.check_all;
-      case 'cancelled':
-        return BootstrapIcons.x_circle;
-      default:
-        return BootstrapIcons.circle;
+      case 'pending': return BootstrapIcons.clock;
+      case 'confirmed': return BootstrapIcons.check_circle;
+      case 'completed': return BootstrapIcons.check_all;
+      case 'cancelled': return BootstrapIcons.x_circle;
+      default: return BootstrapIcons.circle;
     }
-  }
-
-  Color _getCardBorderColor(int index) {
-    final colors = [
-      const Color(0xFFFFD700),
-      const Color(0xFFFFC107),
-      const Color(0xFF00BCD4),
-      const Color(0xFF9C27B0),
-    ];
-    return colors[index % colors.length];
   }
 
   @override
@@ -103,7 +114,15 @@ class _AppointmentManagementScreenState
       color: const Color(0xFFF5F5F5),
       child: Consumer<AppointmentProvider>(
         builder: (context, appointmentProvider, child) {
-          
+          if (widget.highlightAppointmentId != null &&
+              !_hasHighlighted &&
+              !appointmentProvider.isLoading &&
+              appointmentProvider.appointments.isNotEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _checkHighlight();
+            });
+          }
+
           if (appointmentProvider.isLoading) {
             return const Center(
               child: CircularProgressIndicator(
@@ -140,9 +159,11 @@ class _AppointmentManagementScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildPageHeader(),
-                const SizedBox(height: 24),
-                _buildViewToggle(),
+                AppointmentManagementHeader(
+                  onNewAppointment: _showNewAppointmentDialog,
+                  showCalendarView: _showCalendarView,
+                  onViewToggle: (val) => setState(() => _showCalendarView = val),
+                ),
                 const SizedBox(height: 24),
                 if (!_showCalendarView) ...[
                   AppointmentStatsRow(stats: stats, appointmentStatuses: _appointmentStatuses),
@@ -151,7 +172,13 @@ class _AppointmentManagementScreenState
                   const SizedBox(height: 24),
                   const AppointmentFilters(),
                   const SizedBox(height: 24),
-                  _buildAppointmentsGrid(filteredAppointments),
+                  AppointmentsGrid(
+                    appointments: filteredAppointments,
+                    onView: _viewAppointment,
+                    onEdit: _editAppointment,
+                    onChangeStatus: _showStatusDialog,
+                    onDelete: _deleteAppointment,
+                  ),
                 ] else ...[
                  AppointmentCalendarView(
                   appointments: appointmentProvider.appointments,
@@ -173,96 +200,6 @@ class _AppointmentManagementScreenState
     );
   }
 
-  // 📅 VIEW TOGGLE
-  Widget _buildViewToggle() {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        gradient:
-            const LinearGradient(colors: [Color(0xFF1A1A1A), Colors.black]),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFFD700), width: 2),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: InkWell(
-              onTap: () => setState(() => _showCalendarView = false),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                decoration: BoxDecoration(
-                  gradient: !_showCalendarView
-                      ? const LinearGradient(
-                          colors: [Color(0xFFFFD700), Color(0xFFFFC700)])
-                      : null,
-                  color: !_showCalendarView ? null : Colors.black,
-                  border: Border.all(color: const Color(0xFFFFD700), width: 2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(BootstrapIcons.grid_3x3_gap_fill,
-                        color: !_showCalendarView
-                            ? Colors.black
-                            : const Color(0xFFFFD700),
-                        size: 18),
-                    const SizedBox(width: 8),
-                    Text('Grid View',
-                        style: TextStyle(
-                            color: !_showCalendarView
-                                ? Colors.black
-                                : const Color(0xFFFFD700),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14)),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: InkWell(
-              onTap: () => setState(() => _showCalendarView = true),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                decoration: BoxDecoration(
-                  gradient: _showCalendarView
-                      ? const LinearGradient(
-                          colors: [Color(0xFFFFD700), Color(0xFFFFC700)])
-                      : null,
-                  color: _showCalendarView ? null : Colors.black,
-                  border: Border.all(color: const Color(0xFFFFD700), width: 2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(BootstrapIcons.calendar3,
-                        color: _showCalendarView
-                            ? Colors.black
-                            : const Color(0xFFFFD700),
-                        size: 18),
-                    const SizedBox(width: 8),
-                    Text('Calendar View',
-                        style: TextStyle(
-                            color: _showCalendarView
-                                ? Colors.black
-                                : const Color(0xFFFFD700),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14)),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _selectCalendarDate() async {
     final tomorrow = DateTime.now().add(const Duration(days: 1));
     final initialDate = _selectedCalendarDate.isBefore(tomorrow)
@@ -272,8 +209,7 @@ class _AppointmentManagementScreenState
     final date = await showDatePicker(
       context: context,
       initialDate: initialDate,
-      firstDate:
-          tomorrow, // First selectable date is tomorrow (no past, no today)
+      firstDate: tomorrow,
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (context, child) => Theme(
         data: ThemeData.dark().copyWith(
@@ -289,7 +225,6 @@ class _AppointmentManagementScreenState
     if (date != null) setState(() => _selectedCalendarDate = date);
   }
 
-  // ⭐ NEW: Parse time slot to minutes since midnight
   int _parseTimeSlotLocal(String timeSlot) {
     final parts = timeSlot.split(':');
     final hour = int.parse(parts[0]);
@@ -297,41 +232,25 @@ class _AppointmentManagementScreenState
     return hour * 60 + minute;
   }
 
-  // ⭐ NEW: Get slot availability status
   Map<String, dynamic> _getSlotAvailability(
     List<AppointmentModel> dayAppointments,
     String timeSlot,
   ) {
     final slotTime = _parseTimeSlotLocal(timeSlot);
-    final slotEndTime = slotTime + 30; // Each slot is 30 minutes
+    final slotEndTime = slotTime + 30;
 
-    print(
-        '[CALENDAR] Checking slot: $timeSlot (range: $slotTime-$slotEndTime min)');
-
-    // ⭐ FIXED: Find appointments that OVERLAP with this 30-minute slot
     final activeAppointments = dayAppointments.where((apt) {
       final aptStartTime = _parseTimeSlotLocal(apt.appointmentTime);
       final aptDuration = apt.estimatedDuration;
       final aptEndTime = aptStartTime + aptDuration;
 
-      // ⭐ CRITICAL FIX: Check if appointment overlaps with THIS slot
-      // Overlap occurs if:
-      // 1. Appointment starts before slot ends AND
-      // 2. Appointment ends after slot starts
       final isOverlapping =
           (aptStartTime < slotEndTime && aptEndTime > slotTime);
-
-      if (isOverlapping) {
-        print(
-            '[CALENDAR]   ✓ Overlaps: ${apt.appointmentTime} (${apt.vehicleBrand} ${apt.vehicleModel}, $aptStartTime-$aptEndTime, ${aptDuration}min)');
-      }
 
       return isOverlapping;
     }).toList();
 
     final availableSlots = 2 - activeAppointments.length;
-    print(
-        '[CALENDAR] Result: ${activeAppointments.length} appointments overlap, $availableSlots slots available');
 
     return {
       'available': availableSlots > 0,
@@ -340,241 +259,58 @@ class _AppointmentManagementScreenState
     };
   }
 
-  Widget _buildPageHeader() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-            colors: [Colors.black, Color(0xFF1A1A1A), Colors.black]),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFFD700), width: 2),
-        boxShadow: [
-          BoxShadow(
-              color: const Color(0xFFFFD700).withOpacity(0.2),
-              blurRadius: 16,
-              offset: const Offset(0, 4))
-        ],
-      ),
-      child: Row(
-        children: [
-          const Icon(BootstrapIcons.calendar_check,
-              color: Color(0xFFFFD700), size: 28),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Appointment Management',
-                    style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFFFD700))),
-                SizedBox(height: 4),
-                Text('Monitor walk-in and scheduled customer bookings',
-                    style: TextStyle(color: Color(0xFFE0E0E0), fontSize: 14)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          ElevatedButton.icon(
-            onPressed: _showNewAppointmentDialog,
-            icon: const Icon(BootstrapIcons.plus_circle, size: 20),
-            label: const Text('New Appointment'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFFD700),
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              elevation: 4,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   final List<Map<String, dynamic>> _appointmentStatuses = [
     {
       'key': 'total',
       'label': 'Total',
       'icon': BootstrapIcons.calendar_event_fill,
-      'colors': [Color(0xFF2196F3), Color(0xFF1976D2)],
+      'colors': [const Color(0xFF2196F3), const Color(0xFF1976D2)],
     },
     {
       'key': 'pending',
       'label': 'Pending',
       'icon': BootstrapIcons.clock_history,
-      'colors': [Color(0xFFFFC107), Color(0xFFFF9800)], // Amber
+      'colors': [const Color(0xFFFFC107), const Color(0xFFFF9800)],
     },
     {
       'key': 'confirmed',
       'label': 'Confirmed',
       'icon': BootstrapIcons.check_circle_fill,
-      'colors': [Color(0xFF00BCD4), Color(0xFF0097A7)], // Cyan
+      'colors': [const Color(0xFF00BCD4), const Color(0xFF0097A7)],
     },
     {
       'key': 'in-progress',
       'label': 'In-Progress',
       'icon': BootstrapIcons.arrow_repeat,
-      'colors': [Color(0xFF2196F3), Color(0xFF1976D2)], // Blue
+      'colors': [const Color(0xFF2196F3), const Color(0xFF1976D2)],
     },
     {
       'key': 'completed',
       'label': 'Completed',
       'icon': BootstrapIcons.check_all,
-      'colors': [Color(0xFF4CAF50), Color(0xFF2E7D32)], // Green
+      'colors': [const Color(0xFF4CAF50), const Color(0xFF2E7D32)],
     },
     {
       'key': 'cancelled',
       'label': 'Cancelled',
       'icon': BootstrapIcons.x_circle_fill,
-      'colors': [Color(0xFFE53935), Color(0xFFB71C1C)],
+      'colors': [const Color(0xFFE53935), const Color(0xFFB71C1C)],
     },
   ];
-  
-  Widget _buildAppointmentsGrid(List<AppointmentModel> appointments) {
-    if (appointments.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(60),
-        decoration: BoxDecoration(
-          gradient:
-              const LinearGradient(colors: [Color(0xFF1A1A1A), Colors.black]),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFFFD700), width: 2),
-        ),
-        child: Center(
-          child: Column(
-            children: [
-              Icon(BootstrapIcons.calendar_x,
-                  color: const Color(0xFFFFD700).withOpacity(0.5), size: 64),
-              const SizedBox(height: 16),
-              const Text('No appointments found',
-                  style: TextStyle(
-                      color: Color(0xFFFFD700),
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text('Try adjusting your filters',
-                  style: TextStyle(
-                      color: const Color(0xFFFFD700).withOpacity(0.7),
-                      fontSize: 14)),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // 🔧 RESPONSIVE GRID: Narrower and shorter cards with suitable height
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        double maxCardWidth;
-
-        // Calculate optimal columns based on available width
-        if (constraints.maxWidth < 600) {
-          maxCardWidth = constraints.maxWidth; // 1 column
-        } else if (constraints.maxWidth < 900) {
-          maxCardWidth = 500; // 2 columns
-        } else if (constraints.maxWidth < 1400) {
-          maxCardWidth = 420; // 3 columns
-        } else {
-          maxCardWidth = 380; // 4 columns
-        }
-
-        return GridView.builder(
-          shrinkWrap: true, // ⭐ REQUIRED
-          physics: const NeverScrollableScrollPhysics(), // ⭐ REQUIRED
-          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: maxCardWidth,
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-            mainAxisExtent: 350,
-          ),
-          itemCount: appointments.length,
-          itemBuilder: (context, index) {
-            final apt = appointments[index];
-
-            return AppointmentCard(
-              appointment: apt,
-              index: index,
-              borderColor: _getCardBorderColor(index),
-              statusColor: _getStatusColor(apt.status),
-              formatPhoneNumber: _formatPhoneNumber,
-              formatDate: _formatDate,
-              formatTime: _formatTime,
-              formatBranch: _formatBranch,
-              isLightColor: _isLightColor,
-              onView: () => _viewAppointment(apt),
-              onEdit: () => editAppointment(apt),
-              onChangeStatus: () => _showStatusDialog(apt),
-              onDelete: () => _deleteAppointment(apt),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  // Helper function to determine if a color is light
-  bool _isLightColor(Color color) {
-    // Calculate relative luminance
-    final double luminance =
-        (0.299 * color.red + 0.587 * color.green + 0.114 * color.blue) / 255;
-    return luminance > 0.5; // If luminance > 0.5, it's a light color
-  }
-
-  String _formatPhoneNumber(String phone) {
-    // Remove any existing formatting
-    phone = phone.replaceAll(RegExp(r'[^0-9]'), '');
-
-    // Format as 012-3456789
-    if (phone.length >= 10) {
-      return '${phone.substring(0, 3)}-${phone.substring(3)}';
-    } else if (phone.length >= 3) {
-      return '${phone.substring(0, 3)}-${phone.substring(3)}';
-    }
-    return phone;
-  }
-
-  String _formatDate(String date) {
-    try {
-      final d = DateTime.parse(date);
-      return DateFormat('MMM dd, yyyy').format(d);
-    } catch (e) {
-      return date;
-    }
-  }
-
-  String _formatTime(String time) {
-    try {
-      final parts = time.split(':');
-      final hour = int.parse(parts[0]);
-      final minute = parts[1];
-      final period = hour >= 12 ? 'PM' : 'AM';
-      final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
-      return '$displayHour:$minute $period';
-    } catch (e) {
-      return time;
-    }
-  }
-
-  String _formatBranch(String branchID) {
-    if (branchID.toLowerCase().contains('melaka')) return 'Melaka';
-    if (branchID.toLowerCase().contains('seremban')) return 'Seremban 2';
-    return branchID;
-  }
 
   void _viewAppointment(AppointmentModel appointment) {
     showDialog(
       context: context,
       builder: (context) => ViewAppointmentDialog(
         appointment: appointment,
-        onEdit: editAppointment,
+        onEdit: _editAppointment,
+        onChangeStatus: _showStatusDialog,
         onRefresh: _refreshAppointments,
       ),
     );
   }
 
-  void editAppointment(AppointmentModel appointment) {
+  void _editAppointment(AppointmentModel appointment) {
     showDialog(
       context: context,
       builder: (context) => EditAppointmentDialog(

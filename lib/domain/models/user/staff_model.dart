@@ -7,7 +7,6 @@ class StaffModel {
   final String name;
   final String email;
   final String phone;
-  final String role;
   final String branchID;
   final String branchName;
   final bool isActive;
@@ -15,6 +14,7 @@ class StaffModel {
   final DateTime? lastActiveDate;
   final int completedTasks;
   final int currentTaskCount;
+  final List<String> absentDates;
 
   StaffModel({
     required this.id,
@@ -23,7 +23,6 @@ class StaffModel {
     required this.name,
     required this.email,
     required this.phone,
-    required this.role,
     required this.branchID,
     required this.branchName,
     this.isActive = true,
@@ -31,6 +30,7 @@ class StaffModel {
     this.lastActiveDate,
     this.completedTasks = 0,
     this.currentTaskCount = 0,
+    this.absentDates = const [],
   });
 
   factory StaffModel.fromFirestore(DocumentSnapshot doc) {
@@ -44,7 +44,6 @@ class StaffModel {
       name: data['name'] ?? '',
       email: data['email'] ?? '',
       phone: data['phone'] ?? '',
-      role: data['role'] ?? '',
       branchID: data['branchID'] ?? '',
       branchName: data['branchName'] ?? '',
       isActive: data['isActive'] ?? true,
@@ -52,6 +51,7 @@ class StaffModel {
       lastActiveDate: (data['lastActiveDate'] as Timestamp?)?.toDate(),
       completedTasks: data['completedTasks'] ?? data['totalCompletedTasks'] ?? 0,
       currentTaskCount: data['currentTaskCount'] ?? 0,
+      absentDates: data['absentDates'] != null ? List<String>.from(data['absentDates']) : [],
     );
   }
 
@@ -64,7 +64,6 @@ class StaffModel {
       name: json['name'] ?? '',
       email: json['email'] ?? '',
       phone: json['phone'] ?? '',
-      role: json['role'] ?? '',
       branchID: json['branchID'] ?? '',
       branchName: json['branchName'] ?? '',
       isActive: json['isActive'] ?? true,
@@ -78,6 +77,7 @@ class StaffModel {
           : null,
       completedTasks: json['completedTasks'] ?? json['totalCompletedTasks'] ?? 0,
       currentTaskCount: json['currentTaskCount'] ?? 0,
+      absentDates: json['absentDates'] != null ? List<String>.from(json['absentDates']) : [],
     );
   }
 
@@ -90,7 +90,6 @@ class StaffModel {
       'name': name,
       'email': email,
       'phone': phone,
-      'role': role,
       'branchID': branchID,
       'branchName': branchName,
       'isActive': isActive,
@@ -98,6 +97,7 @@ class StaffModel {
       'lastActiveDate': lastActiveDate != null ? Timestamp.fromDate(lastActiveDate!) : null,
       'completedTasks': completedTasks,
       'currentTaskCount': currentTaskCount,
+      'absentDates': absentDates,
     };
   }
 
@@ -114,7 +114,6 @@ class StaffModel {
     String? name,
     String? email,
     String? phone,
-    String? role,
     String? branchID,
     String? branchName,
     bool? isActive,
@@ -122,6 +121,7 @@ class StaffModel {
     DateTime? lastActiveDate,
     int? completedTasks,
     int? currentTaskCount,
+    List<String>? absentDates,
   }) {
     return StaffModel(
       id: id ?? this.id,
@@ -130,7 +130,6 @@ class StaffModel {
       name: name ?? this.name,
       email: email ?? this.email,
       phone: phone ?? this.phone,
-      role: role ?? this.role,
       branchID: branchID ?? this.branchID,
       branchName: branchName ?? this.branchName,
       isActive: isActive ?? this.isActive,
@@ -138,11 +137,12 @@ class StaffModel {
       lastActiveDate: lastActiveDate ?? this.lastActiveDate,
       completedTasks: completedTasks ?? this.completedTasks,
       currentTaskCount: currentTaskCount ?? this.currentTaskCount,
+      absentDates: absentDates ?? this.absentDates,
     );
   }
 
   @override
   String toString() {
-    return 'StaffModel(id: $id, staffID: $staffID, name: $name, role: $role, branchID: $branchID, isActive: $isActive)';
+    return 'StaffModel(id: $id, staffID: $staffID, name: $name, branchID: $branchID, isActive: $isActive)';
   }
 }

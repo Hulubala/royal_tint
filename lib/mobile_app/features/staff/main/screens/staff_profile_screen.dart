@@ -5,6 +5,9 @@ import 'package:royal_tint/domain/models/user/staff_model.dart';
 import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:royal_tint/mobile_app/features/staff/main/widgets/staff_header.dart';
 import 'package:royal_tint/mobile_app/features/staff/main/widgets/staff_security_settings_panel.dart';
+import 'package:royal_tint/mobile_app/features/staff/main/widgets/staff_account_settings.dart';
+import 'package:royal_tint/mobile_app/features/staff/main/widgets/staff_shop_info_panel.dart';
+import 'package:royal_tint/mobile_app/features/staff/main/widgets/staff_stat_card.dart';
 
 class StaffProfileScreen extends StatefulWidget {
   const StaffProfileScreen({super.key});
@@ -28,73 +31,36 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
     super.dispose();
   }
 
-  // FIXED: Removed 'const' from constructors using the dynamic variable 'gold'
-  Widget _buildEditableField({
-    required String label,
-    required TextEditingController controller,
-    required IconData icon,
-    required Color gold,
-    bool enabled = true,
-  }) {
-    return TextFormField(
-      controller: controller,
-      enabled: enabled && !_isSaving,
-      style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
-      cursorColor: gold,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(color: gold.withOpacity(0.6), fontSize: 13),
-        floatingLabelBehavior: FloatingLabelBehavior.always,
-        prefixIcon: Icon(icon, color: gold.withOpacity(0.7), size: 18),
-        filled: true,
-        fillColor: const Color(0xFF121212),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: gold.withOpacity(0.2), width: 1),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: gold, width: 1.5), // Fixed constant error here
-        ),
-        disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: gold.withOpacity(0.1), width: 1),
-        ),
-      ),
-    );
-  }
+  Future<void> _handleSave(String docID) async {
+    if (docID.isEmpty || _nameController == null || _phoneController == null) return;
 
-  Widget _buildReadOnlyField(String label, String value, IconData icon, Color gold) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF121212).withOpacity(0.5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: gold.withOpacity(0.1), width: 1),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: gold.withOpacity(0.4), size: 18),
-          const SizedBox(width: 14),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(color: gold.withOpacity(0.4), fontSize: 11, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                style: TextStyle(color: Colors.grey[500], fontSize: 14, fontWeight: FontWeight.w500),
-              ),
-            ],
+    setState(() => _isSaving = true);
+
+    try {
+      await _staffRepo.updateProfile(
+        docID,
+        _nameController!.text,
+        _phoneController!.text,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profile updated successfully!'),
+            backgroundColor: Colors.green,
           ),
-        ],
-      ),
-    );
+        );
+        FocusScope.of(context).unfocus();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   @override
@@ -142,7 +108,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
                                   border: Border.all(color: gold, width: 2),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.15),
+                                      color: Colors.black.withValues(alpha: 0.15),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     )
@@ -158,7 +124,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
                                 decoration: BoxDecoration(
                                   color: Colors.black,
                                   borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: gold.withOpacity(0.5)),
+                                  border: Border.all(color: gold.withValues(alpha: 0.5)),
                                 ),
                                 child: Text(
                                   branch,
@@ -171,73 +137,12 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
                         const SizedBox(height: 24),
 
                         // Account Settings Box
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.black,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: gold.withOpacity(0.3), width: 1),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Row(
-                              children: [
-                                Icon(BootstrapIcons.person_badge_fill, color: gold, size: 18),
-                                const SizedBox(width: 10),
-                                Text(
-                                  'Account Settings',
-                                  style: TextStyle(color: gold, fontSize: 16, fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 20),
-                              
-                              if (_nameController != null)
-                                _buildEditableField(
-                                  label: 'Full Name',
-                                  controller: _nameController!,
-                                  icon: BootstrapIcons.person,
-                                  gold: gold,
-                                ),
-                              
-                              const SizedBox(height: 14),
-                              _buildReadOnlyField('Email Address', email, BootstrapIcons.envelope, gold),
-                              const SizedBox(height: 14),
-                              
-                              if (_phoneController != null)
-                                _buildEditableField(
-                                  label: 'Phone Number',
-                                  controller: _phoneController!,
-                                  icon: BootstrapIcons.telephone,
-                                  gold: gold,
-                                ),
-                                
-                              const SizedBox(height: 20),
-                              
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  onPressed: _isSaving ? null : () => _handleSave(staff?.staffID ?? ''),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: gold,
-                                    foregroundColor: Colors.black,
-                                    padding: const EdgeInsets.symmetric(vertical: 14),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                    elevation: 0,
-                                  ),
-                                  child: _isSaving
-                                      ? const SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2),
-                                        )
-                                      : const Text('Save Changes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                                ),
-                              ),
-                            ],
-                          ),
+                        StaffAccountSettings(
+                          nameController: _nameController,
+                          phoneController: _phoneController,
+                          email: email,
+                          isSaving: _isSaving,
+                          onSave: () => _handleSave(staff?.staffID ?? ''),
                         ),
                         const SizedBox(height: 16),
 
@@ -248,11 +153,14 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
                         ),
                         const SizedBox(height: 16),
                           
+                        const StaffShopInfoPanel(),
+                        const SizedBox(height: 16),
+                          
                         // Stats Row
                         Row(
                           children: [
                             Expanded(
-                              child: _StatCard(
+                              child: StaffStatCard(
                                 label: 'Tasks Done',
                                 value: '${staff?.currentTaskCount ?? 0}', 
                                 icon: BootstrapIcons.check2_square,
@@ -260,7 +168,7 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
                             ),
                             const SizedBox(width: 16),
                             Expanded(
-                              child: _StatCard(
+                              child: StaffStatCard(
                                 label: 'Status',
                                 value: staff?.isActive == true ? 'Active' : 'Inactive',
                                 icon: BootstrapIcons.shield_check,
@@ -299,75 +207,5 @@ class _StaffProfileScreenState extends State<StaffProfileScreen> {
         ],
       ),
     );    
-  }
-
-  Future<void> _handleSave(String docID) async {
-    if (docID.isEmpty || _nameController == null || _phoneController == null) return;
-
-    setState(() => _isSaving = true);
-
-    try {
-      // FIXED: Converted from named parameters to 3 positional parameters
-      await _staffRepo.updateProfile(
-        docID,
-        _nameController!.text,
-        _phoneController!.text,
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile updated successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        FocusScope.of(context).unfocus();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to update: $e'), backgroundColor: Colors.red),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
-    }
-  }
-}
-
-// FIXED: Defined _StatCard safely out here at the bottom file scope level
-class _StatCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-
-  const _StatCard({required this.label, required this.value, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    const gold = Color(0xFFFFD700);
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: gold.withOpacity(0.5), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: gold, size: 20),
-          const SizedBox(height: 8),
-          Text(value, style: const TextStyle(color: gold, fontSize: 20, fontWeight: FontWeight.bold)),
-          Text(label, style: TextStyle(color: gold.withOpacity(0.7), fontSize: 11, fontWeight: FontWeight.w600)),
-        ],
-      ),
-    );
   }
 }

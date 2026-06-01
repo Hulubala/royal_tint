@@ -54,7 +54,10 @@ class ProfileService {
     required String phone,
   }) async {
     final uid = currentUid;
-    await _db.collection('managers').doc(uid).update({
+    final q = await _db.collection('managers').where('uid', isEqualTo: uid).limit(1).get();
+    if (q.docs.isEmpty) throw Exception('Manager profile not found');
+    
+    await q.docs.first.reference.update({
       'name': name.trim(),
       'phone': phone.trim(),
       'updatedAt': FieldValue.serverTimestamp(),
@@ -69,11 +72,20 @@ class ProfileService {
     await _db.collection('branches').doc(branchID).update({
       'phone': supportPhone.trim(),
       'operatingHours': operatingHours,
-      'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
   Future<void> sendPasswordResetEmail(String email) async {
-    await _auth.sendPasswordResetEmail(email: email.trim());
+    try {
+      await _auth.sendPasswordResetEmail(
+        email: email.trim(),
+        actionCodeSettings: ActionCodeSettings(
+          url: 'http://localhost:60512/#/reset-password?role=manager',
+          handleCodeInApp: false,
+        ),
+      );
+    } catch (_) {
+      await _auth.sendPasswordResetEmail(email: email.trim());
+    }
   }
 }

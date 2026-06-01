@@ -35,43 +35,16 @@ class SecuritySettingsPanel extends StatelessWidget {
                   color: Color(0xFFFFD700),
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Reset your password via email link',
-                  style: TextStyle(color: Colors.grey[400], fontSize: 13),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
             ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Forgot your password? Reset your password by sending a secure link to your registered email address.',
+            style: TextStyle(color: Colors.grey[400], fontSize: 13),
           ),
           const SizedBox(height: 18),
 
           _infoRow('Email', email.isEmpty ? '-' : email),
-          const SizedBox(height: 12),
-
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: const Color(0xFF0F0F0F),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF2A2A2A)),
-            ),
-            child: Row(
-              children: [
-                const Icon(BootstrapIcons.info_circle_fill,
-                    color: Color(0xFFFFD700), size: 18),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'We will send a password reset link to your email. This is the safest option and does not require re-login inside the app.',
-                    style: TextStyle(color: Colors.grey[300], fontSize: 13),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           const SizedBox(height: 18),
 
           Align(
@@ -110,7 +83,7 @@ class SecuritySettingsPanel extends StatelessWidget {
           child: Text(
             '$label:',
             style: TextStyle(
-              color: Colors.grey[300],
+              color: Color(0xFFFFD700),
               fontWeight: FontWeight.w700,
             ),
           ),

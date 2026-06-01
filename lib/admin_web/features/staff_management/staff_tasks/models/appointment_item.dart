@@ -12,6 +12,7 @@ class AppointmentItem {
   final String packageType;
   final Map<String, String> tintSelections;
   final String? assignedStaffID;
+  final int estimatedDuration;
 
   AppointmentItem({
     required this.id,
@@ -27,6 +28,7 @@ class AppointmentItem {
     required this.packageType,
     required this.tintSelections,
     required this.assignedStaffID,
+    required this.estimatedDuration,
   });
 
   bool get isAssigned => (assignedStaffID != null && assignedStaffID!.trim().isNotEmpty);
@@ -57,6 +59,7 @@ class AppointmentItem {
       packageType: (map['packageType'] ?? 'sv'),
       tintSelections: tintSelections,
       assignedStaffID: map['assignedStaffID'] as String?,
+      estimatedDuration: (map['estimatedDuration'] as num?)?.toInt() ?? 60,
     );
   }
 }

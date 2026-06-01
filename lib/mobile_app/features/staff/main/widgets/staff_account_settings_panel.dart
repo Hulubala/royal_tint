@@ -75,7 +75,7 @@ class _StaffAccountSettingsPanelState extends State<StaffAccountSettingsPanel> {
       decoration: BoxDecoration(
         color: Colors.black,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: gold.withOpacity(0.3)),
+        border: Border.all(color: gold.withValues(alpha: 0.3)),
       ),
       child: Form(
         key: _formKey,
@@ -181,21 +181,21 @@ class _StaffAccountSettingsPanelState extends State<StaffAccountSettingsPanel> {
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: gold.withOpacity(enabled ? 0.8 : 0.5)),
-        prefixIcon: Icon(icon, color: gold.withOpacity(enabled ? 0.8 : 0.5), size: 18),
+        labelStyle: TextStyle(color: gold.withValues(alpha: enabled ? 0.8 : 0.5)),
+        prefixIcon: Icon(icon, color: gold.withValues(alpha: enabled ? 0.8 : 0.5), size: 18),
         filled: true,
         fillColor: enabled ? Colors.grey[900] : Colors.transparent,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: gold.withOpacity(enabled ? 0.5 : 0.2)),
+          borderSide: BorderSide(color: gold.withValues(alpha: enabled ? 0.5 : 0.2)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: gold.withOpacity(enabled ? 0.5 : 0.2)),
+          borderSide: BorderSide(color: gold.withValues(alpha: enabled ? 0.5 : 0.2)),
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: gold.withOpacity(0.2)),
+          borderSide: BorderSide(color: gold.withValues(alpha: 0.2)),
         ),
       ),
     );
@@ -211,16 +211,16 @@ class _StaffAccountSettingsPanelState extends State<StaffAccountSettingsPanel> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: gold.withOpacity(0.2)),
+        border: Border.all(color: gold.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
-          Icon(icon, color: gold.withOpacity(0.5), size: 18),
+          Icon(icon, color: gold.withValues(alpha: 0.5), size: 18),
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: TextStyle(color: gold.withOpacity(0.5), fontSize: 12)),
+              Text(label, style: TextStyle(color: gold.withValues(alpha: 0.5), fontSize: 12)),
               const SizedBox(height: 4),
               Text(value, style: const TextStyle(color: Colors.white, fontSize: 16)),
             ],

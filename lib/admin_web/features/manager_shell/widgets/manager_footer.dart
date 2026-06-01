@@ -17,7 +17,7 @@ class ManagerFooter extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFFD700).withOpacity(0.15),
+            color: const Color(0xFFFFD700).withValues(alpha: 0.15),
             blurRadius: 10,
             offset: const Offset(0, -3),
           ),

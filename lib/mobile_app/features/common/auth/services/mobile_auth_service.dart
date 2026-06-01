@@ -14,15 +14,66 @@ class MobileAuthService {
   Future<UserCredential> signIn({
     required String email,
     required String password,
+    String? expectedRole,
   }) async {
-    return _auth.signInWithEmailAndPassword(
+    final cred = await _auth.signInWithEmailAndPassword(
       email: email.trim(),
       password: password,
     );
+    
+    if (expectedRole != null) {
+      if (expectedRole == 'customer') {
+        final doc = await _db.collection('users').doc(cred.user!.uid).get();
+        if (!doc.exists || doc.data()?['role'] != 'customer') {
+          await _auth.signOut();
+          throw Exception('Unauthorized. Please use the Staff or Manager app.');
+        }
+      } else if (expectedRole == 'staff') {
+        final doc = await _db.collection('staff').where('uid', isEqualTo: cred.user!.uid).limit(1).get();
+        if (doc.docs.isEmpty) {
+          await _auth.signOut();
+          throw Exception('Unauthorized. Please use the correct login app.');
+        }
+      }
+    }
+    return cred;
   }
 
   Future<void> sendPasswordResetEmail(String email) async {
-    await _auth.sendPasswordResetEmail(email: email.trim());
+    String role = 'customer';
+    try {
+      final querySnapshot = await _db
+          .collection('users')
+          .where('email', isEqualTo: email.trim().toLowerCase())
+          .limit(1)
+          .get();
+      if (querySnapshot.docs.isNotEmpty) {
+        role = querySnapshot.docs.first.data()['role'] ?? 'customer';
+      } else {
+        // Fallback: Check staff collection
+        final staffSnapshot = await _db
+            .collection('staff')
+            .where('email', isEqualTo: email.trim().toLowerCase())
+            .limit(1)
+            .get();
+        if (staffSnapshot.docs.isNotEmpty) {
+          role = 'staff';
+        }
+      }
+    } catch (_) {}
+
+    try {
+      await _auth.sendPasswordResetEmail(
+        email: email.trim(),
+        actionCodeSettings: ActionCodeSettings(
+          url: 'http://localhost:60512/#/reset-password?role=$role',
+          handleCodeInApp: false,
+        ),
+      );
+    } catch (_) {
+      // Fallback
+      await _auth.sendPasswordResetEmail(email: email.trim());
+    }
   }
 
   Future<UserCredential> registerCustomer({

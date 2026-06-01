@@ -160,7 +160,13 @@ class StaffTasksService {
       updatedAt: now,
     );
 
-    await _taskRepository.createTask(task);
+    final taskId = await _taskRepository.createTask(task);
+
+    await _db.collection('tasks').doc(taskId).update({
+      'appointmentDate': appt.appointmentDate,
+      'appointmentTime': appt.appointmentTime,
+      'estimatedDuration': appt.estimatedDuration,
+    });
 
     await _db.collection('appointments').doc(appt.id).update({
       'assignedStaffID': staff.id,

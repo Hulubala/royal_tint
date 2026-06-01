@@ -204,6 +204,7 @@ class _ShopSettingsPanelState extends State<ShopSettingsPanel> {
 
             TextFormField(
               controller: _supportPhoneCtrl,
+              maxLength: 15,
               style: const TextStyle(color: Colors.white),
               cursorColor: const Color(0xFFFFD700),
               decoration: _dec(
@@ -287,10 +288,12 @@ class _ShopSettingsPanelState extends State<ShopSettingsPanel> {
   }) {
     return TextFormField(
       controller: controller,
+      maxLength: 20,
       style: const TextStyle(color: Colors.white),
       cursorColor: const Color(0xFFFFD700),
       decoration: InputDecoration(
         labelText: label,
+        counterText: '',
         floatingLabelBehavior: FloatingLabelBehavior.always,
         labelStyle: const TextStyle(
           color: Color(0xFFFFD700),
@@ -311,6 +314,12 @@ class _ShopSettingsPanelState extends State<ShopSettingsPanel> {
       validator: (v) {
         final s = (v ?? '').trim();
         if (s.isEmpty) return 'Required';
+        
+        final isClosed = s.toLowerCase() == 'closed';
+        final timeRegex = RegExp(r'^(?:1[0-2]|0?[1-9]):[0-5][0-9]\s?(?:AM|PM|am|pm)\s*-\s*(?:1[0-2]|0?[1-9]):[0-5][0-9]\s?(?:AM|PM|am|pm)$');
+        if (!isClosed && !timeRegex.hasMatch(s)) {
+          return 'Use "9:00 AM - 6:00 PM" or "Closed"';
+        }
         return null;
       },
     );

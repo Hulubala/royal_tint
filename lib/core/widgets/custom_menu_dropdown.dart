@@ -4,16 +4,18 @@ class MenuItem<T> {
   final T value;
   final String label;
   final Widget? leading;
+  final bool enabled;
   const MenuItem({
     required this.value,
     required this.label,
     this.leading,
+    this.enabled = true,
   });
 }
 
 class MenuDropdown<T> extends StatefulWidget {
   final String label;
-  final IconData icon;
+  final IconData? icon;
   final String hint;
   final T? value;
   final List<MenuItem<T>> items;
@@ -22,11 +24,12 @@ class MenuDropdown<T> extends StatefulWidget {
   final double? width;
   final double menuMaxHeight;
   final bool showItemLeading;
+  final Color labelColor;
 
   const MenuDropdown({
     super.key,
     required this.label,
-    required this.icon,
+    this.icon,
     required this.hint,
     required this.value,
     required this.items,
@@ -35,6 +38,7 @@ class MenuDropdown<T> extends StatefulWidget {
     this.width,
     this.menuMaxHeight = 320,
     this.showItemLeading = true,
+    this.labelColor = const Color(0xFFFFD700),
   });
 
   @override
@@ -62,57 +66,60 @@ class _MenuDropdownState<T> extends State<MenuDropdown<T>> {
         .firstWhere((e) => e != null, orElse: () => null);
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          widget.label,
-          style: const TextStyle(
-            color: gold,
-            fontWeight: FontWeight.bold,
-            fontSize: 12,
+        if (widget.label.isNotEmpty) ...[
+          Text(
+            widget.label,
+            style: TextStyle(
+              color: !_enabled ? widget.labelColor.withOpacity(0.5) : widget.labelColor,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
           ),
-        ),
-        const SizedBox(height: 4),
+          const SizedBox(height: 4),
+        ],
         Focus(
           onFocusChange: (v) => setState(() => _focused = v),
           child: MouseRegion(
             onEnter: (_) => setState(() => _hovered = true),
             onExit: (_) => setState(() => _hovered = false),
-            child: MenuAnchor(
-              controller: _controller,
-              style: MenuStyle(
-                backgroundColor: const WidgetStatePropertyAll(Colors.transparent),
-                elevation: const WidgetStatePropertyAll(14),
-                padding: const WidgetStatePropertyAll(EdgeInsets.zero),
-              ),
-              builder: (context, controller, child) {
-                final isOpen = controller.isOpen;
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final effectiveWidth = widget.width ?? constraints.maxWidth;
+                if (_anchorWidth != effectiveWidth) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (!mounted) return;
+                    if (_anchorWidth == effectiveWidth) return;
+                    setState(() => _anchorWidth = effectiveWidth);
+                  });
+                }
+                final finalAnchorWidth = _anchorWidth ?? effectiveWidth;
 
-                final borderColor = !_enabled
-                    ? gold.withOpacity(0.25)
-                    : (isOpen || _focused || _hovered)
-                        ? const Color(0xFFFFC700)
-                        : gold;
+                return MenuAnchor(
+                  controller: _controller,
+                  style: MenuStyle(
+                    backgroundColor: const WidgetStatePropertyAll(Colors.transparent),
+                    elevation: const WidgetStatePropertyAll(14),
+                    padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+                    minimumSize: WidgetStatePropertyAll(Size(finalAnchorWidth, 0)),
+                    maximumSize: WidgetStatePropertyAll(Size(finalAnchorWidth, widget.menuMaxHeight)),
+                  ),
+                  builder: (context, controller, child) {
+                    final isOpen = controller.isOpen;
 
-                final fillColor = !_enabled
-                    ? Colors.black.withOpacity(0.5)
-                    : (isOpen || _focused || _hovered)
-                        ? const Color(0xFF111111)
-                        : Colors.black;
+                    final borderColor = !_enabled
+                        ? gold.withOpacity(0.5)
+                        : (isOpen || _focused || _hovered)
+                            ? const Color(0xFFFFC700)
+                            : gold;
 
-                return LayoutBuilder(
-                  builder: (context, constraints) {
-      
-                    final effectiveWidth = widget.width ?? constraints.maxWidth;
-                    _anchorWidth ??= effectiveWidth;
-
-                    if (_anchorWidth != effectiveWidth) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (!mounted) return;
-                        if (_anchorWidth == effectiveWidth) return;
-                        setState(() => _anchorWidth = effectiveWidth);
-                      });
-                    }
+                    final fillColor = !_enabled
+                        ? Colors.black
+                        : (isOpen || _focused || _hovered)
+                            ? const Color(0xFF111111)
+                            : Colors.black;
 
                     return InkWell(
                       onTap: !_enabled
@@ -143,8 +150,10 @@ class _MenuDropdownState<T> extends State<MenuDropdown<T>> {
                         ),
                         child: Row(
                           children: [
-                            Icon(widget.icon, color: gold, size: 20),
-                            const SizedBox(width: 10),
+                            if (widget.icon != null) ...[
+                              Icon(widget.icon, color: !_enabled ? gold.withOpacity(0.5) : gold, size: 20),
+                              const SizedBox(width: 10),
+                            ],
                             Expanded(
                               child: Text(
                                 selectedLabel ?? widget.hint,
@@ -152,7 +161,7 @@ class _MenuDropdownState<T> extends State<MenuDropdown<T>> {
                                 style: TextStyle(
                                   color: (selectedLabel == null)
                                       ? gold.withOpacity(0.45)
-                                      : gold,
+                                      : (!_enabled ? gold.withOpacity(0.5) : gold),
                                   fontWeight: FontWeight.w600,
                                   fontSize: 14,
                                 ),
@@ -162,94 +171,105 @@ class _MenuDropdownState<T> extends State<MenuDropdown<T>> {
                               isOpen
                                   ? Icons.keyboard_arrow_up
                                   : Icons.keyboard_arrow_down,
-                              color: gold,
+                              color: !_enabled ? gold.withOpacity(0.5) : gold,
                             ),
                           ],
                         ),
                       ),
                     );
-                  },
-                );
-              },
-              menuChildren: [
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minWidth: _anchorWidth ?? 0,
-                    maxWidth: _anchorWidth ?? double.infinity,
-                    maxHeight: widget.menuMaxHeight,
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0A0A0A),
+                  },  
+                  menuChildren: [
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minWidth: _anchorWidth ?? 0,
+                        maxWidth: _anchorWidth ?? double.infinity,
+                        maxHeight: widget.menuMaxHeight,
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: gold, width: 2),
-                        ),
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(6),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: List.generate(widget.items.length, (index) {
-                              final item = widget.items[index];
-                              final isSelected =
-                                  widget.value != null && item.value == widget.value;
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0A0A0A),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: gold, width: 2),
+                            ),
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.all(6),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: List.generate(widget.items.length, (index) {
+                                  final item = widget.items[index];
+                                  final isSelected =
+                                      widget.value != null && item.value == widget.value;
+                                  final itemEnabled = item.enabled;
 
-                              return Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: !_enabled
-                                      ? null
-                                      : () {
-                                          widget.onChanged(item.value);
-                                          _controller.close();
-                                        },
-                                  borderRadius: BorderRadius.circular(10),
-                                  hoverColor: gold.withOpacity(0.12),
-                                  child: Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(10),
-                                      color: isSelected
-                                          ? gold.withOpacity(0.10)
-                                          : Colors.transparent,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        if (widget.showItemLeading && item.leading != null) ...[
-                                          item.leading!,
-                                          const SizedBox(width: 10),
-                                        ],
-                                        Expanded(
-                                          child: Text(
-                                            item.label,
-                                            style: const TextStyle(
-                                              color: gold,
-                                              fontWeight: FontWeight.w600,
+                                  return StatefulBuilder(
+                                    builder: (context, setState) {
+                                      bool isItemHovered = false;
+                                      return MouseRegion(
+                                        onEnter: (_) => setState(() => isItemHovered = true),
+                                        onExit: (_) => setState(() => isItemHovered = false),
+                                        child: Material(
+                                          color: Colors.transparent,
+                                          child: InkWell(
+                                            onTap: !itemEnabled
+                                                ? null
+                                                : () {
+                                                    widget.onChanged(item.value);
+                                                    _controller.close();
+                                                  },
+                                            borderRadius: BorderRadius.circular(10),
+                                            child: Container(
+                                              width: double.infinity,
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 12,
+                                                vertical: 10,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(10),
+                                                color: isSelected
+                                                    ? gold.withOpacity(0.15)
+                                                    : (isItemHovered && itemEnabled
+                                                        ? gold.withOpacity(0.08)
+                                                        : Colors.transparent),
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  if (widget.showItemLeading && item.leading != null) ...[
+                                                    item.leading!,
+                                                    const SizedBox(width: 10),
+                                                  ],
+                                                  Expanded(
+                                                    child: Text(
+                                                      item.label,
+                                                      style: TextStyle(
+                                                        color: itemEnabled ? gold : gold.withOpacity(0.35),
+                                                        fontWeight: FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  if (isSelected)
+                                                    const Icon(Icons.check, color: gold, size: 18),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         ),
-                                        if (isSelected)
-                                          const Icon(Icons.check, color: gold, size: 18),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }),
+                                      );
+                                    }
+                                  );
+                                }),
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-              ],
+                  ],
+                );
+              },
             ),
           ),
         ),

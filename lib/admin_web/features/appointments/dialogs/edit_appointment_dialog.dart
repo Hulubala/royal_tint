@@ -8,7 +8,8 @@ import 'package:royal_tint/data/services/package_service.dart';
 import 'package:royal_tint/domain/models/appointment_model.dart';
 import 'package:royal_tint/domain/models/tint_package_model.dart';
 import 'package:royal_tint/admin_web/features/appointments/dialogs/thirty_minute_time_picker.dart';
-import 'package:royal_tint/core/widgets/custom_menu_dropdown.dart';
+import 'package:royal_tint/admin_web/features/appointments/widgets/package_tint_selection_section.dart';
+import 'package:royal_tint/admin_web/features/appointments/widgets/appointment_date_time_section.dart';
 
 // EDIT APPOINTMENT DIALOG
 class EditAppointmentDialog extends StatefulWidget {
@@ -161,11 +162,6 @@ class EditAppointmentDialogState extends State<EditAppointmentDialog> {
                           color: Color(0xFFFFD700),
                           fontWeight: FontWeight.bold,
                           fontSize: 18)),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: _isSaving ? null : () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: Color(0xFFFFD700)),
-                  ),
                 ],
               ),
             ),
@@ -249,12 +245,27 @@ class EditAppointmentDialogState extends State<EditAppointmentDialog> {
                                 BootstrapIcons.car_front_fill),
                             const SizedBox(height: 16),
 
-                            // Date Picker
-                            _buildDatePicker(),
-                            const SizedBox(height: 16),
-
-                            // Time Picker
-                            _buildTimePicker(),
+                            // Date & Time Picker
+                            AppointmentDateTimeSection(
+                              isSaving: _isSaving,
+                              appointmentType: 'scheduled', // edit is always scheduled
+                              selectedDate: _selectedDate,
+                              selectedTime: _selectedTime,
+                              estimatedMinutes: widget.appointment.estimatedDuration > 0
+                                  ? widget.appointment.estimatedDuration
+                                  : 90,
+                              branchID: widget.branchID,
+                              onDateChanged: (date) {
+                                setState(() {
+                                  _selectedDate = date ?? _selectedDate;
+                                });
+                              },
+                              onTimeChanged: (time) {
+                                setState(() {
+                                  _selectedTime = time ?? _selectedTime;
+                                });
+                              },
+                            ),
                             const SizedBox(height: 16),
 
                             // Branch (read-only)
@@ -266,11 +277,19 @@ class EditAppointmentDialogState extends State<EditAppointmentDialog> {
                                 BootstrapIcons.geo_alt_fill),
                             const SizedBox(height: 16),
 
-                            // Package Dropdown
-                            _buildPackageDropdown(),
-                            const SizedBox(height: 16),
-
-                            _buildTintSelections(),
+                            // Package & Tint Selection
+                            PackageTintSelectionSection(
+                              packages: _packages,
+                              selectedPackage: _selectedPackage,
+                              tintSelections: _tintSelections,
+                              isSaving: _isSaving,
+                              onPackageChanged: _onPackageChanged,
+                              onTintSelectionChanged: (key, value) {
+                                setState(() {
+                                  _tintSelections[key] = value;
+                                });
+                              },
+                            ),
                             const SizedBox(height: 16),
 
                             // Notes
@@ -453,305 +472,7 @@ class EditAppointmentDialogState extends State<EditAppointmentDialog> {
     );
   }
 
-  Widget _buildDatePicker() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('APPOINTMENT DATE',
-            style: TextStyle(
-                color: Color(0xFFFFD700),
-                fontWeight: FontWeight.bold,
-                fontSize: 13)),
-        const SizedBox(height: 8),
-        InkWell(
-          onTap: _isSaving
-              ? null
-              : () async {
-                  // ⭐ FIX: Store context before async gap
-                  final pickerContext = context;
 
-                  // Ensure initialDate is at least tomorrow
-                  final tomorrow = DateTime.now().add(const Duration(days: 1));
-                  final initialDate = _selectedDate.isBefore(tomorrow)
-                      ? tomorrow
-                      : _selectedDate;
-
-                  final DateTime? pickedDate = await showDatePicker(
-                    context: pickerContext,
-                    initialDate: initialDate,
-                    firstDate: tomorrow, // No past, no today
-                    lastDate: DateTime.now().add(const Duration(days: 365)),
-                    builder: (BuildContext context, Widget? child) {
-                      return Theme(
-                        data: ThemeData.dark().copyWith(
-                          colorScheme: const ColorScheme.dark(
-                            primary: Color(0xFFFFD700),
-                            onPrimary: Colors.black,
-                            surface: Color(0xFF1A1A1A),
-                            onSurface: Color(0xFFFFD700),
-                          ),
-                        ),
-                        child: child!,
-                      );
-                    },
-                  );
-
-                  if (pickedDate != null && mounted) {
-                    setState(() {
-                      _selectedDate = pickedDate;
-                    });
-                  }
-                },
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFFFD700), width: 2),
-            ),
-            child: Row(
-              children: [
-                const Icon(BootstrapIcons.calendar3, color: Color(0xFFFFD700)),
-                const SizedBox(width: 12),
-                Text(
-                  DateFormat('dd/MM/yyyy').format(_selectedDate),
-                  style: const TextStyle(
-                      color: Color(0xFFFFD700), fontWeight: FontWeight.w600),
-                ),
-                const Spacer(),
-                const Icon(BootstrapIcons.calendar_event,
-                    color: Color(0xFFFFD700), size: 16),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTimePicker() {
-    final estimatedDuration = widget.appointment.estimatedDuration > 0
-        ? widget.appointment.estimatedDuration
-        : 90;
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Text('APPOINTMENT TIME',
-                style: TextStyle(
-                    color: Color(0xFFFFD700),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13)),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFD700).withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFFFD700)),
-              ),
-              child: Text(
-                'Allow $estimatedDuration min',
-                style: const TextStyle(
-                    color: Color(0xFFFFD700),
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        InkWell(
-          onTap: _isSaving
-              ? null
-              : () async {
-                  const openingTime = TimeOfDay(hour: 9, minute: 0);
-                  const closingTime = TimeOfDay(hour: 19, minute: 0);
-
-                  final appointmentDateStr =
-                      DateFormat('yyyy-MM-dd').format(_selectedDate);
-                  // ⭐ FIX: Use ThirtyMinuteTimePicker instead of native picker
-                  final TimeOfDay? selectedTime = await showDialog<TimeOfDay>(
-                    context: context,
-                    barrierDismissible: true,
-                    builder: (BuildContext dialogContext) =>
-                        ThirtyMinuteTimePicker(
-                      initialTime: _selectedTime,
-                      minTime: openingTime,
-                      maxTime: closingTime,
-                      isWalkIn: false, // Edit is never walk-in
-                      appointmentDate: appointmentDateStr,
-                      branchID: widget.branchID,
-                      estimatedDuration: estimatedDuration,
-                    ),
-                  );
-
-                  // ⭐ FIX: Update state if time was selected
-                  if (selectedTime != null) {
-                    setState(() {
-                      _selectedTime = selectedTime;
-                    });
-                  }
-                },
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFFFD700), width: 2),
-            ),
-            child: Row(
-              children: [
-                const Icon(BootstrapIcons.clock, color: Color(0xFFFFD700)),
-                const SizedBox(width: 12),
-                Text(
-                  _selectedTime.format(context),
-                  style: const TextStyle(
-                      color: Color(0xFFFFD700), fontWeight: FontWeight.w600),
-                ),
-                const Spacer(),
-                const Icon(BootstrapIcons.clock_fill,
-                    color: Color(0xFFFFD700), size: 16),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPackageDropdown() {
-    if (_packages.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.red, width: 2),
-        ),
-        child: const Row(
-          children: [
-            Icon(BootstrapIcons.exclamation_triangle, color: Colors.red),
-            SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'No packages available. Please add packages.',
-                style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return MenuDropdown<String>(
-      label: 'Service Package',
-      icon: BootstrapIcons.box_seam, 
-      hint: 'Select package',
-      value: _selectedPackage?.packageName ?? '',
-      enabled: !_isSaving, 
-      menuMaxHeight: 320, 
-      items: _packages.map((p) {
-        return MenuItem<String>(
-          value: p.packageName,
-          label: p.packageName,
-        );
-      }).toList(),
-      onChanged: (value) {
-        if (value == null) return;
-        final selectedPackage = _packages.firstWhere((p) => p.packageName == value);
-
-        setState(() {
-          _onPackageChanged(selectedPackage); 
-        });
-      },
-    );
-  }
-    
-  Widget _buildTintSelections() {
-    final packageName = _selectedPackage?.packageName ?? '';
-
-    MenuDropdown<String> tintDropdown(String label, String key) {
-      final allowed = allowedCodesFor(packageName: packageName, sectionKey: key);
-
-      final current = normalizeTintSelection(
-        selection: _tintSelections[key] ?? '',
-        allowedCodes: allowed,
-      );
-
-      return MenuDropdown<String>(
-        label: label,
-        icon: BootstrapIcons.droplet_half,
-        value: current.isEmpty ? null : current,
-        hint: allowed.isEmpty ? 'No options' : 'Select darkness',
-        enabled: allowed.isNotEmpty,
-        items: allowed
-            .map((code) => MenuItem<String>(value: code, label: code))
-            .toList(),
-        onChanged: (value) {
-          if (value == null) return;
-          setState(() {
-            _tintSelections[key] = mapSVtoVLT(value);
-          });
-        },
-      );
-    }
-
-    if (packageName.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.red, width: 2),
-        ),
-        child: const Text(
-          'Please select a package first.',
-          style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-        ),
-      );
-    }
-
-    final anyAllowed = TintSections.all.any((k) =>
-        allowedCodesFor(packageName: packageName, sectionKey: k).isNotEmpty);
-
-    if (!anyAllowed) {
-      return Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.black,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.red, width: 2),
-        ),
-        child: Text(
-          'No darkness options available for $packageName. Please update your package settings.',
-          style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-        ),
-      );
-    }
-
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(child: tintDropdown('Front Windscreen', TintSections.frontWindScreen)),
-            const SizedBox(width: 12),
-            Expanded(child: tintDropdown('Front Side Windows', TintSections.frontSideWindows)),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(child: tintDropdown('Rear Passenger', TintSections.rearPassenger)),
-            const SizedBox(width: 12),
-            Expanded(child: tintDropdown('Rear Windscreeen', TintSections.rearWindscreen)),
-          ],
-        ),
-      ],
-    );
-  }
 
   Future<void> _saveChanges() async {
     if (!_formKey.currentState!.validate()) return;

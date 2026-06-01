@@ -13,16 +13,23 @@ class AppointmentController {
       provider.setLoading(true);
       provider.setError(null);
 
-      final apts = await _appointmentService.getLatestAppointments(
-        branchID: branchID,
-        limit: 200,
+      final stream = _appointmentService.getAppointmentsStream(branchID);
+      final subscription = stream.listen(
+        (apts) {
+          provider.setAppointments(apts);
+          provider.setLoading(false);
+        },
+        onError: (e) {
+          provider.setLoading(false);
+          provider.setError('Failed to load appointments: $e');
+          debugPrint('🔴 AppointmentController stream ERROR: $e');
+        },
       );
-
-      provider.setAppointments(apts);
-      provider.setLoading(false);
+      
+      provider.setSubscription(subscription);
     } catch (e) {
       provider.setLoading(false);
-      provider.setError('Failed to load appointments: $e');
+      provider.setError('Failed to initialize appointments: $e');
       debugPrint('🔴 AppointmentController.load ERROR: $e');
     }
   }

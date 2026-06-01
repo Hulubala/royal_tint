@@ -18,4 +18,38 @@ class CustomerRepository {
     }
     return CustomerModel.fromFirestore(doc);
   }
+
+  Stream<CustomerModel> streamCurrentCustomer() {
+    final uid = _auth.currentUser!.uid;
+    return _db.collection('customers').doc(uid).snapshots().map((doc) {
+      if (!doc.exists) {
+        throw Exception('Customer profile not found in customers/$uid');
+      }
+      return CustomerModel.fromFirestore(doc);
+    });
+  }
+
+  Future<void> updateProfile(String uid, String name, String phone) async {
+    await _db.collection('customers').doc(uid).update({
+      'name': name,
+      'phone': phone,
+    });
+  }
+
+  Future<CustomerModel?> getCustomerByPhone(String phone) async {
+    final snapshot = await _db
+        .collection('customers')
+        .where('phone', isEqualTo: phone)
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      return CustomerModel.fromFirestore(snapshot.docs.first);
+    }
+    return null;
+  }
+
+  Future<void> signOut() async {
+    await _auth.signOut();
+  }
 }

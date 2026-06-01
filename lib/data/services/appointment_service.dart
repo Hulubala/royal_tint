@@ -8,6 +8,7 @@ class AppointmentService {
 
   /// Create a new appointment with slot validation
   Future<String?> createAppointment({
+    String? customerID,
     required String customerName,
     required String customerPhone,
     required String branchID,
@@ -21,6 +22,7 @@ class AppointmentService {
     required String appointmentDate,
     required String appointmentTime,
     required String appointmentType, // 'scheduled' or 'walk-in'
+    String? warranty,
     String? notes,
     required double totalPrice,
     required int estimatedDuration, // in minutes
@@ -33,7 +35,7 @@ class AppointmentService {
       );
 
       // Check if slot can accept this appointment
-      if (!_canAcceptAppointment(
+      if (!canAcceptAppointment(
           existingAppointments, appointmentTime, estimatedDuration)) {
         throw Exception(
             'TIME_SLOT_FULL: This time slot is fully booked (max 2 cars)');
@@ -50,7 +52,7 @@ class AppointmentService {
 
       // Create appointment data
       final appointmentData = {
-        'customerID': 'GUEST_${DateTime.now().millisecondsSinceEpoch}',
+        'customerID': customerID ?? 'GUEST_${DateTime.now().millisecondsSinceEpoch}',
         'customerName': customerName,
         'customerPhone': customerPhone,
         'branchID': branchID,
@@ -64,6 +66,7 @@ class AppointmentService {
         'estimatedDuration': estimatedDuration,
         'status': 'pending',
         'assignedStaffID': null,
+        'warranty': warranty,
         'notes': notes,
         'totalPrice': totalPrice,
         'createdAt': FieldValue.serverTimestamp(),
@@ -95,9 +98,10 @@ class AppointmentService {
     required String packageName,
     Map<String, String>? tintSelections, 
     String? notes,
+    String? branchID,
   }) async {
     try {
-      await _firestore.collection('appointments').doc(appointmentID).update({
+      final updateData = {
         'customerName': customerName,
         'customerPhone': customerPhone,
         'vehicleInfo.plateNumber': vehiclePlate, // Update nested field
@@ -107,8 +111,10 @@ class AppointmentService {
         'packageName': packageName,
         'notes': notes,
         if (tintSelections != null) 'tintSelections': tintSelections,
+        if (branchID != null) 'branchID': branchID,
         'updatedAt': FieldValue.serverTimestamp(),
-      });
+      };
+      await _firestore.collection('appointments').doc(appointmentID).update(updateData);
     } catch (e) {
       throw Exception('❌ Failed to update appointment: $e');
     }
@@ -118,12 +124,17 @@ class AppointmentService {
   Future<void> updateAppointmentStatus({
     required String appointmentID,
     required String newStatus,
+    bool isBranchSwap = false,
   }) async {
     try {
-      await _firestore.collection('appointments').doc(appointmentID).update({
+      final updateData = {
         'status': newStatus,
         'updatedAt': FieldValue.serverTimestamp(),
-      });
+      };
+      if (isBranchSwap) {
+        updateData['isBranchSwap'] = true;
+      }
+      await _firestore.collection('appointments').doc(appointmentID).update(updateData);
     } catch (e) {
       throw Exception('❌ Failed to update appointment status: $e');
     }
@@ -139,6 +150,100 @@ class AppointmentService {
     }
   }
 
+
+  /// Get next upcoming appointment for a specific customer
+  Future<AppointmentModel?> getNextUpcomingAppointmentForCustomer(String customerID) async {
+    try {
+      final now = DateTime.now();
+      final todayStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+      
+      final querySnapshot = await _firestore
+          .collection('appointments')
+          .where('customerID', isEqualTo: customerID)
+          .where('status', whereIn: ['pending', 'confirmed'])
+          .get();
+
+      final appointments = querySnapshot.docs
+          .map((doc) => AppointmentModel.fromFirestore(doc))
+          .toList();
+
+      if (appointments.isEmpty) return null;
+
+      final upcoming = appointments.where((a) {
+        try {
+          final aptDate = DateTime.parse(a.appointmentDate);
+          final aptTimeParts = a.appointmentTime.split(':');
+          final aptDateTime = DateTime(
+            aptDate.year,
+            aptDate.month,
+            aptDate.day,
+            int.parse(aptTimeParts[0]),
+            int.parse(aptTimeParts[1]),
+          );
+          return aptDateTime.isAfter(now);
+        } catch (_) {
+          return a.appointmentDate.compareTo(todayStr) >= 0;
+        }
+      }).toList();
+
+      if (upcoming.isEmpty) return null;
+
+      upcoming.sort((a, b) {
+        final dateCompare = a.appointmentDate.compareTo(b.appointmentDate);
+        if (dateCompare != 0) return dateCompare;
+        return a.appointmentTime.compareTo(b.appointmentTime);
+      });
+
+      return upcoming.first;
+    } catch (e) {
+      print('Error fetching next upcoming appointment: $e');
+      return null;
+    }
+  }
+
+  /// Get all appointments for a customer (sorted descending by date and time)
+  Future<List<AppointmentModel>> getAppointmentsForCustomer(String customerID) async {
+    try {
+      final querySnapshot = await _firestore
+          .collection('appointments')
+          .where('customerID', isEqualTo: customerID)
+          .get();
+
+      final list = querySnapshot.docs
+          .map((doc) => AppointmentModel.fromFirestore(doc))
+          .toList();
+
+      list.sort((a, b) {
+        final dateCompare = b.appointmentDate.compareTo(a.appointmentDate);
+        if (dateCompare != 0) return dateCompare;
+        return b.appointmentTime.compareTo(a.appointmentTime);
+      });
+
+      return list;
+    } catch (e) {
+      print('❌ Error fetching appointments for customer: $e');
+      return [];
+    }
+  }
+
+  /// Get all appointments for a customer as a real-time stream
+  Stream<List<AppointmentModel>> getCustomerAppointmentsStream(String customerID) {
+    return _firestore
+        .collection('appointments')
+        .where('customerID', isEqualTo: customerID)
+        .snapshots()
+        .map((snapshot) {
+      final list = snapshot.docs
+          .map((doc) => AppointmentModel.fromFirestore(doc))
+          .toList();
+      list.sort((a, b) {
+        final dateCompare = b.appointmentDate.compareTo(a.appointmentDate);
+        if (dateCompare != 0) return dateCompare;
+        return b.appointmentTime.compareTo(a.appointmentTime);
+      });
+      return list;
+    });
+  }
 
   Future<List<AppointmentModel>> getLatestAppointments({
     required String branchID,
@@ -251,10 +356,10 @@ class AppointmentService {
     }
   }
 
-  // ========== PRIVATE HELPER METHODS ==========
+  // ========== HELPER METHODS ==========
 
   /// ⭐ Check if a time slot can accept a new appointment (max 2 cars)
-  bool _canAcceptAppointment(
+  bool canAcceptAppointment(
     List<AppointmentModel> dayAppointments,
     String timeSlot,
     int durationMinutes,
@@ -262,16 +367,12 @@ class AppointmentService {
     final slotTime = _parseTimeSlot(timeSlot);
     final endTime = slotTime + durationMinutes;
 
-    print(
-        '[SLOT_CHECK] Checking availability for slot: $timeSlot (${_convertToTimeString(slotTime)}-${_convertToTimeString(endTime)}, duration: ${durationMinutes}min)');
-    print('[SLOT_CHECK] Slot time range: $slotTime - $endTime minutes');
-
     // Count overlapping appointments
     final overlappingAppointments = <AppointmentModel>[];
 
     for (final apt in dayAppointments) {
       final aptStartTime = _parseTimeSlot(apt.appointmentTime);
-      final aptDuration = apt.estimatedDuration; // Default 90 minutes
+      final aptDuration = apt.estimatedDuration > 0 ? apt.estimatedDuration : 90; // Default 90 minutes
       final aptEndTime = aptStartTime + aptDuration;
 
       // Check if appointments overlap
@@ -279,20 +380,11 @@ class AppointmentService {
 
       if (isOverlapping) {
         overlappingAppointments.add(apt);
-        print(
-            '[OVERLAP]   ✓ Overlaps: ${apt.appointmentTime} (${apt.vehicleBrand} ${apt.vehicleModel}, range: $aptStartTime-$aptEndTime, duration: ${aptDuration}min)');
-      } else {
-        print(
-            '[OVERLAP]   ✗ No overlap: ${apt.appointmentTime} (${apt.vehicleBrand} ${apt.vehicleModel}, range: $aptStartTime-$aptEndTime)');
       }
     }
 
     final overlappingCount = overlappingAppointments.length;
     final canAccept = overlappingCount < 2;
-
-    print(
-        '[SLOT_CHECK] Result: $overlappingCount overlapping appointments (max 2 allowed) = ${canAccept ? '✅ AVAILABLE' : '❌ FULLY BOOKED'}');
-    print('---');
 
     // Maximum 2 cars can be serviced at any given moment
     return canAccept;
