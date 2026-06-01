@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class MobileAuthService {
@@ -66,7 +67,7 @@ class MobileAuthService {
       await _auth.sendPasswordResetEmail(
         email: email.trim(),
         actionCodeSettings: ActionCodeSettings(
-          url: 'http://localhost:60512/#/reset-password?role=$role',
+          url: 'https://royal-tint-admin.vercel.app/', // Customer/Staff uses base app
           handleCodeInApp: false,
         ),
       );

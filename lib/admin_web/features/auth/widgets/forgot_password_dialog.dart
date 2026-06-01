@@ -123,7 +123,7 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
 
     setState(() => _loading = true);
 
-    const continueUrl = 'http://localhost:60512/#/manager/login'; 
+    const continueUrl = 'https://royal-tint-admin.vercel.app/manager/login';
 
     final result = await context.read<AuthProvider>().requestPasswordReset(
           email: _emailController.text.trim(),

@@ -10,7 +10,6 @@ import 'package:royal_tint/admin_web/features/staff_management/register_staff/sc
 import 'package:royal_tint/admin_web/features/staff_management/staff_tasks/screens/staff_tasks_screen.dart';
 import 'package:royal_tint/admin_web/features/profiles/screens/profile_screen.dart';
 import 'package:royal_tint/admin_web/features/auth/screens/login_screen.dart';
-import 'package:royal_tint/admin_web/features/auth/screens/reset_password_screen.dart';
 import 'package:royal_tint/admin_web/features/staff_management/staff_list/screens/staff_list_screen.dart';
 import 'package:royal_tint/admin_web/features/staff_management/staff_list/screens/staff_schedule_screen.dart';
 import 'package:royal_tint/admin_web/features/feedback/screens/feedback_management_screen.dart';
@@ -31,6 +30,7 @@ class AdminWebAppRouter {
       // ROUTE PROTECTION - REDIRECT LOGIC
       // ============================================
       redirect: (BuildContext context, GoRouterState state) {
+
         // Remove setup route access after initial setup
         if (state.uri.toString() == '/setup') {
           return '/manager/login';
@@ -38,9 +38,8 @@ class AdminWebAppRouter {
 
         final isAuthenticated = authProvider.isAuthenticated;
         final isLoggingIn = state.uri.path == '/manager/login';
-        final isResetPassword = state.uri.path == '/reset-password';
 
-        if (!isAuthenticated && !isLoggingIn && !isResetPassword) {
+        if (!isAuthenticated && !isLoggingIn) {
           return '/manager/login';
         }
 
@@ -61,18 +60,6 @@ class AdminWebAppRouter {
           builder: (context, state) => const ManagerLoginScreen(),
         ),
 
-        // ============================================
-        // CUSTOM PASSWORD RESET PAGE
-        // ============================================
-        GoRoute(
-          path: '/reset-password',
-          name: 'reset-password',
-          builder: (context, state) {
-            // Firebase passes the oobCode via query parameters when a user clicks the link
-            final oobCode = state.uri.queryParameters['oobCode'] ?? '';
-            return ResetPasswordScreen(oobCode: oobCode);
-          },
-        ),
 
         // ============================================
         // MANAGER DASHBOARD
