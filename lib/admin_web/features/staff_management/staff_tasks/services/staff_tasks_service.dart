@@ -51,10 +51,16 @@ class StaffTasksService {
         .map((d) => AppointmentItem.fromMap(d.id, d.data()))
         .toList();
 
+    final now = DateTime.now();
+    final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
     final filtered = list.where((a) {
       final s = a.status.toUpperCase();
       // Allow assignment for CONFIRMED or already IN_PROGRESS appointments 
-      return s == 'CONFIRMED' || s == 'IN_PROGRESS' || s == 'IN-PROGRESS';
+      bool isEligibleStatus = s == 'CONFIRMED' || s == 'IN_PROGRESS' || s == 'IN-PROGRESS';
+      bool isToday = a.appointmentDate == todayStr;
+      
+      return isEligibleStatus && isToday;
     }).toList();
 
     filtered.sort((a, b) =>
