@@ -201,6 +201,13 @@ class SalesBreakdownSection extends StatelessWidget {
           const SizedBox(height: 24),
           const Divider(color: Colors.white24, height: 1),
           const SizedBox(height: 48),
+          Center(
+            child: Text(
+              'PACKAGE BREAKDOWN ${provider.dynamicPeriodLabel.isEmpty ? "" : "(${provider.dynamicPeriodLabel})"}',
+              style: const TextStyle(color: gold, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+            ),
+          ),
+          const SizedBox(height: 16),
           _buildSecondaryBarChart(data, true),
           const SizedBox(height: 24),
         ],
@@ -259,6 +266,13 @@ class SalesBreakdownSection extends StatelessWidget {
           const SizedBox(height: 24),
           const Divider(color: Colors.white24, height: 1),
           const SizedBox(height: 48),
+          Center(
+            child: Text(
+              'VEHICLE DISTRIBUTION ${provider.dynamicPeriodLabel.isEmpty ? "" : "(${provider.dynamicPeriodLabel})"}',
+              style: const TextStyle(color: gold, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+            ),
+          ),
+          const SizedBox(height: 16),
           _buildSecondaryBarChart(data, false),
           const SizedBox(height: 24),
         ],

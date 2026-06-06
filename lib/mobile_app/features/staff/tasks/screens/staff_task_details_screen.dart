@@ -25,7 +25,7 @@ class _StaffTaskDetailsScreenState extends State<StaffTaskDetailsScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => const ConfirmDialog(
-        title: 'Start Task?',
+        title: 'Accept Task?',
         message:
             'This will change the task and appointment status to In Progress.',
         confirmLabel: 'Start',
@@ -232,7 +232,7 @@ class _StaffTaskDetailsScreenState extends State<StaffTaskDetailsScreen> {
           // ── Action buttons ────────────────────────────────────────────────
           if (task.isPending)
             ActionButton(
-              label: 'START TASK',
+              label: 'ACCEPT TASK',
               icon: Icons.play_arrow_rounded,
               color: const Color(0xFF2196F3),
               loading: _loading,

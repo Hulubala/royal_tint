@@ -87,7 +87,11 @@ class _MenuDropdownState<T> extends State<MenuDropdown<T>> {
             onExit: (_) => setState(() => _hovered = false),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final effectiveWidth = widget.width ?? constraints.maxWidth;
+                double effectiveWidth = widget.width ?? constraints.maxWidth;
+                if (effectiveWidth == double.infinity) {
+                  effectiveWidth = 200.0;
+                }
+                
                 if (_anchorWidth != effectiveWidth) {
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (!mounted) return;

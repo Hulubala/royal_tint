@@ -3,8 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:royal_tint/domain/models/appointment_model.dart';
 import 'package:intl/intl.dart';
 
-enum ReportPeriod { daily, monthly, yearly }
-
 class SalesReportProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   
@@ -12,19 +10,23 @@ class SalesReportProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
-  ReportPeriod _selectedPeriod = ReportPeriod.monthly;
-  DateTime _selectedDate = DateTime.now();
+  String _dateFilter = 'all';
+  DateTime? _customStartDate;
+  DateTime? _customEndDate;
   String _selectedBrandFilter = 'All';
 
   bool get isLoading => _isLoading;
   String? get error => _error;
-  ReportPeriod get selectedPeriod => _selectedPeriod;
-  DateTime get selectedDate => _selectedDate;
+  String get dateFilter => _dateFilter;
+  DateTime? get customStartDate => _customStartDate;
+  DateTime? get customEndDate => _customEndDate;
   String get selectedBrandFilter => _selectedBrandFilter;
 
-  // Change period
-  void setPeriod(ReportPeriod period) {
-    _selectedPeriod = period;
+  // Change date filter
+  void setDateFilter(String filter, {DateTime? startDate, DateTime? endDate}) {
+    _dateFilter = filter;
+    _customStartDate = startDate;
+    _customEndDate = endDate;
     notifyListeners();
   }
 
@@ -34,42 +36,26 @@ class SalesReportProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Change selected date (used for daily/monthly/yearly navigation)
-  void setSelectedDate(DateTime date) {
-    _selectedDate = date;
-    notifyListeners();
-  }
-  
-  void navigatePrevious() {
-    if (_selectedPeriod == ReportPeriod.daily) {
-      _selectedDate = _selectedDate.subtract(const Duration(days: 1));
-    } else if (_selectedPeriod == ReportPeriod.monthly) {
-      _selectedDate = DateTime(_selectedDate.year, _selectedDate.month - 1, 1);
-    } else {
-      _selectedDate = DateTime(_selectedDate.year - 1, 1, 1);
+  String get dynamicPeriodLabel {
+    final now = DateTime.now();
+    if (_dateFilter == 'all') return 'All Time';
+    if (_dateFilter == 'today') {
+      return 'Today: ${DateFormat('dd/MM/yyyy').format(now)}';
+    } else if (_dateFilter == 'this_week') {
+      final startWeek = now.subtract(const Duration(days: 7));
+      return 'This Week: ${DateFormat('dd/MM').format(startWeek)} - ${DateFormat('dd/MM/yyyy').format(now)}';
+    } else if (_dateFilter == 'this_month') {
+      return 'This Month: ${DateFormat('MMM yyyy').format(now)}';
+    } else if (_dateFilter == 'select_month' && _customStartDate != null) {
+      return DateFormat('MMM yyyy').format(_customStartDate!);
+    } else if (_dateFilter == 'month_range' && _customStartDate != null && _customEndDate != null) {
+      return '${DateFormat('MMM yyyy').format(_customStartDate!)} - ${DateFormat('MMM yyyy').format(_customEndDate!)}';
+    } else if (_dateFilter == 'select_date' && _customStartDate != null) {
+      return DateFormat('dd/MM/yyyy').format(_customStartDate!);
+    } else if (_dateFilter == 'date_range' && _customStartDate != null && _customEndDate != null) {
+      return '${DateFormat('dd/MM/yy').format(_customStartDate!)} - ${DateFormat('dd/MM/yy').format(_customEndDate!)}';
     }
-    notifyListeners();
-  }
-
-  void navigateNext() {
-    if (_selectedPeriod == ReportPeriod.daily) {
-      _selectedDate = _selectedDate.add(const Duration(days: 1));
-    } else if (_selectedPeriod == ReportPeriod.monthly) {
-      _selectedDate = DateTime(_selectedDate.year, _selectedDate.month + 1, 1);
-    } else {
-      _selectedDate = DateTime(_selectedDate.year + 1, 1, 1);
-    }
-    notifyListeners();
-  }
-
-  String get periodLabel {
-    if (_selectedPeriod == ReportPeriod.daily) {
-      return DateFormat('dd MMM yyyy').format(_selectedDate);
-    } else if (_selectedPeriod == ReportPeriod.monthly) {
-      return DateFormat('MMMM yyyy').format(_selectedDate);
-    } else {
-      return DateFormat('yyyy').format(_selectedDate);
-    }
+    return '';
   }
 
   Future<void> loadSales(String branchID) async {
@@ -100,16 +86,29 @@ class SalesReportProvider extends ChangeNotifier {
   List<AppointmentModel> get filteredSales {
     return _allAppointments.where((app) {
       final date = app.appointmentDateTime;
-      if (_selectedPeriod == ReportPeriod.daily) {
-        return date.year == _selectedDate.year &&
-               date.month == _selectedDate.month &&
-               date.day == _selectedDate.day;
-      } else if (_selectedPeriod == ReportPeriod.monthly) {
-        return date.year == _selectedDate.year &&
-               date.month == _selectedDate.month;
-      } else {
-        return date.year == _selectedDate.year;
+      final now = DateTime.now();
+
+      if (_dateFilter == 'all') return true;
+      if (_dateFilter == 'today') {
+        return date.year == now.year && date.month == now.month && date.day == now.day;
+      } else if (_dateFilter == 'this_week') {
+        return date.isAfter(now.subtract(const Duration(days: 7)));
+      } else if (_dateFilter == 'this_month') {
+        return date.year == now.year && date.month == now.month;
+      } else if (_dateFilter == 'select_month' && _customStartDate != null) {
+        return date.year == _customStartDate!.year && date.month == _customStartDate!.month;
+      } else if (_dateFilter == 'month_range' && _customStartDate != null && _customEndDate != null) {
+        final start = DateTime(_customStartDate!.year, _customStartDate!.month, 1);
+        final end = DateTime(_customEndDate!.year, _customEndDate!.month + 1, 0, 23, 59, 59);
+        return date.isAfter(start) && date.isBefore(end);
+      } else if (_dateFilter == 'select_date' && _customStartDate != null) {
+        return date.year == _customStartDate!.year && date.month == _customStartDate!.month && date.day == _customStartDate!.day;
+      } else if (_dateFilter == 'date_range' && _customStartDate != null && _customEndDate != null) {
+        final start = DateTime(_customStartDate!.year, _customStartDate!.month, _customStartDate!.day);
+        final end = DateTime(_customEndDate!.year, _customEndDate!.month, _customEndDate!.day, 23, 59, 59);
+        return date.isAfter(start) && date.isBefore(end);
       }
+      return true;
     }).toList();
   }
 
@@ -171,8 +170,7 @@ class SalesReportProvider extends ChangeNotifier {
   List<MapEntry<String, double>> get chartData {
     final map = <String, double>{};
     
-    if (_selectedPeriod == ReportPeriod.daily) {
-      // Group by hour
+    if (_dateFilter == 'today' || _dateFilter == 'select_date') {
       for (int i = 9; i <= 18; i++) {
         map['$i:00'] = 0;
       }
@@ -182,11 +180,23 @@ class SalesReportProvider extends ChangeNotifier {
           map['$h:00'] = (map['$h:00'] ?? 0) + app.totalPrice;
         }
       }
-      return map.entries.toList();
-    } 
-    else if (_selectedPeriod == ReportPeriod.monthly) {
-      // Group by day of month
-      final daysInMonth = DateUtils.getDaysInMonth(_selectedDate.year, _selectedDate.month);
+    } else if (_dateFilter == 'this_week') {
+      final now = DateTime.now();
+      final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+      for (int i = 0; i < 7; i++) {
+        final day = startOfWeek.add(Duration(days: i));
+        final label = DateFormat('E dd/MM').format(day);
+        map[label] = 0;
+      }
+      for (var app in filteredSales) {
+        final label = DateFormat('E dd/MM').format(app.appointmentDateTime);
+        if (map.containsKey(label)) {
+          map[label] = (map[label] ?? 0) + app.totalPrice;
+        }
+      }
+    } else if (_dateFilter == 'this_month' || _dateFilter == 'select_month') {
+      final targetDate = _dateFilter == 'this_month' ? DateTime.now() : (_customStartDate ?? DateTime.now());
+      final daysInMonth = DateUtils.getDaysInMonth(targetDate.year, targetDate.month);
       for (int i = 1; i <= daysInMonth; i++) {
         map['$i'] = 0;
       }
@@ -194,10 +204,39 @@ class SalesReportProvider extends ChangeNotifier {
         final d = app.appointmentDateTime.day;
         map['$d'] = (map['$d'] ?? 0) + app.totalPrice;
       }
-      return map.entries.toList();
-    } 
-    else {
-      // Group by month
+    } else if (_dateFilter == 'month_range') {
+      if (_customStartDate != null && _customEndDate != null) {
+        DateTime current = DateTime(_customStartDate!.year, _customStartDate!.month, 1);
+        final end = DateTime(_customEndDate!.year, _customEndDate!.month, 1);
+        while (!current.isAfter(end)) {
+          final label = DateFormat('MMM yy').format(current);
+          map[label] = 0;
+          current = DateTime(current.year, current.month + 1, 1);
+        }
+        for (var app in filteredSales) {
+          final label = DateFormat('MMM yy').format(app.appointmentDateTime);
+          if (map.containsKey(label)) {
+            map[label] = (map[label] ?? 0) + app.totalPrice;
+          }
+        }
+      }
+    } else if (_dateFilter == 'date_range') {
+      if (_customStartDate != null && _customEndDate != null) {
+        DateTime current = DateTime(_customStartDate!.year, _customStartDate!.month, _customStartDate!.day);
+        final end = DateTime(_customEndDate!.year, _customEndDate!.month, _customEndDate!.day);
+        while (!current.isAfter(end)) {
+          final label = DateFormat('dd/MM').format(current);
+          map[label] = 0;
+          current = current.add(const Duration(days: 1));
+        }
+        for (var app in filteredSales) {
+          final label = DateFormat('dd/MM').format(app.appointmentDateTime);
+          if (map.containsKey(label)) {
+            map[label] = (map[label] ?? 0) + app.totalPrice;
+          }
+        }
+      }
+    } else {
       final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       for (var m in months) {
         map[m] = 0;
@@ -206,8 +245,9 @@ class SalesReportProvider extends ChangeNotifier {
         final mStr = months[app.appointmentDateTime.month - 1];
         map[mStr] = (map[mStr] ?? 0) + app.totalPrice;
       }
-      return map.entries.toList();
     }
+    
+    return map.entries.toList();
   }
 
   Map<String, double> _sortMapDesc(Map<String, double> map) {

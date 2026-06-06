@@ -22,7 +22,7 @@ class HomeAppointmentDetailsDialog extends StatelessWidget {
     final parsedDate = DateTime.tryParse(appointment.appointmentDate);
     final dateStr = parsedDate != null ? DateFormat('EEEE, MMM dd, yyyy').format(parsedDate) : appointment.appointmentDate;
     final timeStr = appointment.appointmentTime;
-    final _packageService = PackageService();
+    final packageService = PackageService();
 
     Color statusColor;
     switch (appointment.status.toLowerCase()) {
@@ -206,7 +206,7 @@ class HomeAppointmentDetailsDialog extends StatelessWidget {
 
               // Free Items
               FutureBuilder<TintPackageModel?>(
-                future: _packageService.getPackageById(appointment.packageID),
+                future: packageService.getPackageById(appointment.packageID),
                 builder: (context, pkgSnap) {
                   if (!pkgSnap.hasData || pkgSnap.data!.freeItems.isEmpty) return const SizedBox();
                   return Column(
@@ -231,7 +231,7 @@ class HomeAppointmentDetailsDialog extends StatelessWidget {
                             Expanded(child: Text(item, style: const TextStyle(color: Colors.white, fontSize: 12))),
                           ],
                         ),
-                      )).toList(),
+                      )),
                       const SizedBox(height: 20),
                     ],
                   );

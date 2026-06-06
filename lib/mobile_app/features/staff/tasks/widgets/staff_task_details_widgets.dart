@@ -42,7 +42,7 @@ class TaskStatusBanner extends StatelessWidget {
 
   String _statusHint(String status) {
     switch (status.toUpperCase()) {
-      case 'PENDING':     return 'Tap Start Task to begin';
+      case 'PENDING':     return 'Tap Accept Task to begin';
       case 'IN_PROGRESS': return 'Tap Complete when done';
       case 'COMPLETED':   return 'All done!';
       default:            return '';

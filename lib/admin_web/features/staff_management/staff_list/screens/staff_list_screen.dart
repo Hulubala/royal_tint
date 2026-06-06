@@ -42,12 +42,40 @@ class _StaffListScreenState extends State<StaffListScreen> {
     final todayStr = _getTodayString();
     final isCurrentlyAbsent = staff.absentDates.contains(todayStr);
     
+    if (isCurrentlyAbsent) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Status has already been set for today and cannot be changed again.')),
+      );
+      return;
+    }
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Status Change'),
+        content: Text('Are you sure you want to mark ${staff.name} as On Leave for today? This action cannot be undone to prevent accidental changes.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
     setState(() => _isLoading = true);
     try {
-      await _staffService.setStaffAbsence(staff.id, todayStr, !isCurrentlyAbsent);
+      await _staffService.setStaffAbsence(staff.id, todayStr, true);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${staff.name} marked as ${!isCurrentlyAbsent ? 'Absent' : 'Present'} for today.')),
+        SnackBar(content: Text('${staff.name} marked as On Leave for today.')),
       );
       _loadStaff();
     } catch (e) {
@@ -234,7 +262,7 @@ class _StaffListScreenState extends State<StaffListScreen> {
                                                 ),
                                                 const SizedBox(width: 8),
                                                 Text(
-                                                  isAbsentToday ? 'Absent' : 'Present',
+                                                  isAbsentToday ? 'On Leave' : 'On Duty',
                                                   style: TextStyle(
                                                     color: isAbsentToday ? Colors.redAccent : Colors.greenAccent,
                                                     fontWeight: FontWeight.bold,
@@ -248,16 +276,18 @@ class _StaffListScreenState extends State<StaffListScreen> {
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 // Toggle Attendance Switch
-                                                IconButton(
-                                                  tooltip: isAbsentToday ? 'Mark Present' : 'Mark Absent',
-                                                  icon: Icon(
-                                                    isAbsentToday ? BootstrapIcons.check_circle_fill : BootstrapIcons.x_circle_fill,
-                                                    color: isAbsentToday ? Colors.green : Colors.orange,
-                                                    size: 20,
+                                                if (!isAbsentToday)
+                                                  IconButton(
+                                                    tooltip: 'Mark On Leave',
+                                                    icon: const Icon(
+                                                      BootstrapIcons.x_circle_fill,
+                                                      color: Colors.orange,
+                                                      size: 20,
+                                                    ),
+                                                    onPressed: () => _toggleAbsence(staff),
                                                   ),
-                                                  onPressed: () => _toggleAbsence(staff),
-                                                ),
-                                                const SizedBox(width: 8),
+                                                if (!isAbsentToday)
+                                                  const SizedBox(width: 8),
                                                 // View Schedule Link
                                                 IconButton(
                                                   tooltip: 'View Schedule',

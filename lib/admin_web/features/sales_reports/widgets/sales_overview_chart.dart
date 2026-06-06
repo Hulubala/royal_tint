@@ -18,6 +18,8 @@ class SalesOverviewChart extends StatelessWidget {
     for (var d in chartData) {
       if (d.value > maxY) maxY = d.value;
     }
+    
+    bool isEmpty = chartData.every((e) => e.value == 0);
     maxY = maxY > 0 ? maxY * 1.2 : 100;
 
     return Container(
@@ -30,13 +32,20 @@ class SalesOverviewChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'SALES OVERVIEW',
-            style: TextStyle(color: gold, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.2),
+          Text(
+            'SALES OVERVIEW ${provider.dynamicPeriodLabel.isEmpty ? "" : "(${provider.dynamicPeriodLabel})"}',
+            style: const TextStyle(color: gold, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.2),
           ),
           const SizedBox(height: 32),
           Expanded(
-            child: BarChart(
+            child: isEmpty
+                ? const Center(
+                    child: Text(
+                      'No sales data available for this period.',
+                      style: TextStyle(color: Colors.white54, fontSize: 16),
+                    ),
+                  )
+                : BarChart(
               BarChartData(
                 alignment: BarChartAlignment.spaceAround,
                 maxY: maxY,
@@ -60,15 +69,18 @@ class SalesOverviewChart extends StatelessWidget {
                       getTitlesWidget: (value, meta) {
                         if (value.toInt() >= 0 && value.toInt() < chartData.length) {
                           final label = chartData[value.toInt()].key;
-                          if (chartData.length > 15 && value.toInt() % 3 != 0) return const SizedBox.shrink();
+                          // Format X-axis label font size depending on data density
+                          double fontSize = chartData.length > 15 ? 10 : 12;
+                          // Replace spaces with newlines to help wrapping
+                          final wrappedLabel = label.replaceAll(' ', '\n');
                           return Padding(
                             padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                            child: Text(wrappedLabel, style: TextStyle(color: Colors.white, fontSize: fontSize, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
                           );
                         }
                         return const SizedBox.shrink();
                       },
-                      reservedSize: 28,
+                      reservedSize: 42,
                     ),
                   ),
                   leftTitles: AxisTitles(
@@ -97,7 +109,7 @@ class SalesOverviewChart extends StatelessWidget {
                       BarChartRodData(
                         toY: entry.value.value,
                         color: gold,
-                        width: chartData.length > 15 ? 12 : 24,
+                        width: chartData.length > 20 ? 8 : (chartData.length > 10 ? 12 : 24),
                         borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
                         backDrawRodData: BackgroundBarChartRodData(
                           show: true,

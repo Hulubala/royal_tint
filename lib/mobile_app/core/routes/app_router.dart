@@ -3,7 +3,6 @@ import 'package:royal_tint/mobile_app/features/common/auth/screens/boot_screen.d
 import 'package:royal_tint/mobile_app/features/common/auth/screens/role_selection_screen.dart';
 import 'package:royal_tint/mobile_app/features/customer/auth/screens/customer_login_screen.dart';
 import 'package:royal_tint/mobile_app/features/customer/auth/screens/register_screen.dart';
-import 'package:royal_tint/mobile_app/features/customer/main/screens/customer_home_screen.dart';
 import 'package:royal_tint/mobile_app/features/customer/main/screens/customer_main_screen.dart';
 import 'package:royal_tint/mobile_app/features/staff/auth/screens/staff_login_screen.dart';
 import 'package:royal_tint/mobile_app/features/staff/main/screens/staff_main_screen.dart';

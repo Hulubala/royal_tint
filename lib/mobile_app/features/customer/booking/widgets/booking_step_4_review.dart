@@ -44,8 +44,8 @@ class BookingStep4Review extends StatelessWidget {
           _buildReviewRow('Est. Time', '${provider.estimatedMinutes} minutes'),
           _buildReviewRow('Schedule', '$dateStr at $timeStr'),
           _buildReviewRow('Branch', branchName),
-          if (provider.selectedPackage?.warranty != null && provider.selectedPackage!.warranty!.isNotEmpty)
-            _buildReviewRow('Warranty (Years)', provider.selectedPackage!.warranty!.replaceAll(RegExp(r'\s*years?', caseSensitive: false), '').trim()),
+          if (provider.selectedPackage?.warranty != null && provider.selectedPackage!.warranty.isNotEmpty)
+            _buildReviewRow('Warranty (Years)', provider.selectedPackage!.warranty.replaceAll(RegExp(r'\s*years?', caseSensitive: false), '').trim()),
 
           const SizedBox(height: 16),
           const Divider(color: gold, height: 1),

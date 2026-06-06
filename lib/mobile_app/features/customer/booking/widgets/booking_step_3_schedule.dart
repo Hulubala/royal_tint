@@ -61,6 +61,18 @@ class BookingStep3Schedule extends StatelessWidget {
                       onSurface: gold,
                     ),
                     dialogTheme: const DialogThemeData(backgroundColor: Colors.black),
+                    inputDecorationTheme: const InputDecorationTheme(
+                      filled: true,
+                      fillColor: Colors.black,
+                      labelStyle: TextStyle(color: gold),
+                      hintStyle: TextStyle(color: Colors.white54),
+                      enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: gold)),
+                      focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: gold, width: 2)),
+                    ),
+                    textTheme: const TextTheme(
+                      titleMedium: TextStyle(color: gold),
+                      bodyLarge: TextStyle(color: gold),
+                    ),
                   ),
                   child: child!,
                 );

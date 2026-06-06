@@ -3,21 +3,25 @@ import 'package:bootstrap_icons/bootstrap_icons.dart';
 import 'package:royal_tint/core/widgets/custom_menu_dropdown.dart';
 
 class FeedbackFilterBar extends StatelessWidget {
-  final TextEditingController searchController;
   final String selectedCategory;
   final String dateFilter;
-  final ValueChanged<String> onSearchChanged;
   final ValueChanged<String?> onCategoryChanged;
   final ValueChanged<String?> onDateFilterChanged;
+  final String? customDateLabel;
+  final String? customDateRangeLabel;
+  final String? customMonthLabel;
+  final String? customMonthRangeLabel;
 
   const FeedbackFilterBar({
     super.key,
-    required this.searchController,
     required this.selectedCategory,
     required this.dateFilter,
-    required this.onSearchChanged,
     required this.onCategoryChanged,
     required this.onDateFilterChanged,
+    this.customDateLabel,
+    this.customDateRangeLabel,
+    this.customMonthLabel,
+    this.customMonthRangeLabel,
   });
 
   @override
@@ -33,59 +37,7 @@ class FeedbackFilterBar extends StatelessWidget {
         builder: (context, constraints) {
           final isNarrow = constraints.maxWidth < 800;
 
-          final searchField = Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Search',
-                style: TextStyle(
-                  color: Color(0xFFFFD700),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
-                height: 56,
-                child: TextField(
-                  controller: searchController,
-                  textAlignVertical: TextAlignVertical.center,
-                  style: const TextStyle(color: Color(0xFFFFD700), fontSize: 14),
-                  onChanged: onSearchChanged,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    hintText: 'Search feedbacks by name, phone, plate...',
-                    hintStyle: TextStyle(color: const Color(0xFFFFD700).withValues(alpha: 0.4)),
-                    prefixIcon: const Icon(BootstrapIcons.search, color: Color(0xFFFFD700)),
-                    prefixIconConstraints: const BoxConstraints(minHeight: 56, minWidth: 48),
-                    filled: true,
-                    fillColor: Colors.black,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFFFFD700), width: 2),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFFFFD700), width: 2),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFFFFC700), width: 2),
-                    ),
-                    disabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(
-                        color: const Color(0xFFFFD700).withValues(alpha: 0.3),
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          );
+
 
           final categoryDropdown = MenuDropdown<String>(
             label: 'Category',
@@ -101,15 +53,19 @@ class FeedbackFilterBar extends StatelessWidget {
           );
 
           final dateDropdown = MenuDropdown<String>(
-            label: 'Date',
+            label: 'Date Filter',
             icon: BootstrapIcons.calendar,
             hint: 'All Time',
             value: dateFilter,
-            items: const [
-              MenuItem(value: 'all', label: 'All Time'),
-              MenuItem(value: 'today', label: 'Today'),
-              MenuItem(value: 'this_week', label: 'Last 7 Days'),
-              MenuItem(value: 'this_month', label: 'Last 30 Days'),
+            items: [
+              const MenuItem(value: 'all', label: 'All Time'),
+              const MenuItem(value: 'today', label: 'Today'),
+              const MenuItem(value: 'this_week', label: 'This Week'),
+              const MenuItem(value: 'this_month', label: 'This Month'),
+              MenuItem(value: 'select_month', label: customMonthLabel ?? 'Select Month'),
+              MenuItem(value: 'month_range', label: customMonthRangeLabel ?? 'Month Range'),
+              MenuItem(value: 'select_date', label: customDateLabel ?? 'Select Date'),
+              MenuItem(value: 'date_range', label: customDateRangeLabel ?? 'Date Range'),
             ],
             onChanged: onDateFilterChanged,
           );
@@ -118,8 +74,6 @@ class FeedbackFilterBar extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                searchField,
-                const SizedBox(height: 16),
                 categoryDropdown,
                 const SizedBox(height: 16),
                 dateDropdown,
@@ -130,11 +84,9 @@ class FeedbackFilterBar extends StatelessWidget {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Expanded(flex: 2, child: searchField),
+              Expanded(child: categoryDropdown),
               const SizedBox(width: 16),
-              Expanded(flex: 1, child: categoryDropdown),
-              const SizedBox(width: 16),
-              Expanded(flex: 1, child: dateDropdown),
+              Expanded(child: dateDropdown),
             ],
           );
         },

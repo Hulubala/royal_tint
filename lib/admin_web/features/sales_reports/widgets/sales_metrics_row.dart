@@ -20,13 +20,13 @@ class SalesMetricsRow extends StatelessWidget {
         
         final children = [
           _buildMetricCard(
-            title: 'TOTAL SALES',
+            title: 'TOTAL SALES ${provider.dynamicPeriodLabel.isEmpty ? "" : "(${provider.dynamicPeriodLabel})"}',
             value: 'RM ${NumberFormat('#,##0.00').format(provider.totalSales)}',
             icon: BootstrapIcons.cash_stack,
           ),
           if (isNarrow) const SizedBox(height: 16) else const SizedBox(width: 24),
           _buildMetricCard(
-            title: 'COMPLETED APPOINTMENTS',
+            title: 'COMPLETED APPOINTMENTS ${provider.dynamicPeriodLabel.isEmpty ? "" : "(${provider.dynamicPeriodLabel})"}',
             value: '${provider.totalCompletedAppointments}',
             icon: BootstrapIcons.check_circle_fill,
           ),
