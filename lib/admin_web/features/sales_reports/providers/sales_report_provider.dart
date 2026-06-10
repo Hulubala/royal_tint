@@ -182,9 +182,9 @@ class SalesReportProvider extends ChangeNotifier {
       }
     } else if (_dateFilter == 'this_week') {
       final now = DateTime.now();
-      final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-      for (int i = 0; i < 7; i++) {
-        final day = startOfWeek.add(Duration(days: i));
+      // Use the last 7 days ending today, to perfectly match filteredSales logic
+      for (int i = 6; i >= 0; i--) {
+        final day = now.subtract(Duration(days: i));
         final label = DateFormat('E dd/MM').format(day);
         map[label] = 0;
       }
