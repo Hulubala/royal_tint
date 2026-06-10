@@ -58,7 +58,7 @@ class EditAppointmentDialogState extends State<EditAppointmentDialog> {
     _nameController =
         TextEditingController(text: widget.appointment.customerName);
     _phoneController =
-        TextEditingController(text: widget.appointment.customerPhone ?? '');
+        TextEditingController(text: (widget.appointment.customerPhone ?? '').replaceAll(RegExp(r'[^0-9]'), ''));
     _plateController =
         TextEditingController(text: widget.appointment.vehiclePlate);
     _notesController =
@@ -474,16 +474,6 @@ class EditAppointmentDialogState extends State<EditAppointmentDialog> {
 
   Future<void> _saveChanges() async {
     if (!_formKey.currentState!.validate()) return;
-
-    if (!_isTintSelectionValid()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a darkness level for all tint sections!'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return; 
-    }
 
     setState(() => _isSaving = true);
 

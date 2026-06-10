@@ -88,6 +88,11 @@ class MobileAuthService {
     );
 
     final uid = cred.user!.uid;
+    
+    // Ensure the phone number is stored cleanly as digits only
+    final rawPhone = phone.trim();
+    final cleanPhone = rawPhone.replaceAll(RegExp(r'[^0-9]'), '');
+    final finalPhoneToSave = cleanPhone.isNotEmpty ? cleanPhone : rawPhone;
 
     // users/{uid} minimal identity
     await _db.collection('users').doc(uid).set({
@@ -95,7 +100,7 @@ class MobileAuthService {
       'role': 'customer',
       'name': name.trim(),
       'email': email.trim(),
-      'phone': phone.trim(),
+      'phone': finalPhoneToSave,
       'isActive': true,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
@@ -107,7 +112,7 @@ class MobileAuthService {
       'uid': uid,
       'name': name.trim(),
       'email': email.trim(),
-      'phone': phone.trim(),
+      'phone': finalPhoneToSave,
       'vehicles': [],
       'totalAppointments': 0,
       'totalSpent': 0.0,
@@ -119,6 +124,33 @@ class MobileAuthService {
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+
+    // Link any existing appointments that managers created using this phone number
+    try {
+      if (cleanPhone.isNotEmpty) {
+        // Build a list of possible phone number formats the manager might have typed
+        final searchPhones = {rawPhone, cleanPhone};
+        if (cleanPhone.length >= 10) {
+          searchPhones.add('${cleanPhone.substring(0, 3)}-${cleanPhone.substring(3)}');
+        }
+
+        final appointmentsSnap = await _db
+            .collection('appointments')
+            .where('customerPhone', whereIn: searchPhones.toList())
+            .get();
+        
+        if (appointmentsSnap.docs.isNotEmpty) {
+          final batch = _db.batch();
+          for (var doc in appointmentsSnap.docs) {
+            // Update the appointment to map to this new registered user
+            batch.update(doc.reference, {'customerID': uid});
+          }
+          await batch.commit();
+        }
+      }
+    } catch (e) {
+      print('Error linking previous appointments: $e');
+    }
 
     return cred;
   }

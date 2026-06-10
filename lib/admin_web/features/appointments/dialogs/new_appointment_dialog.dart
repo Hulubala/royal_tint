@@ -224,11 +224,10 @@ class _NewAppointmentDialogState extends State<NewAppointmentDialog> {
                                 _phoneController,
                                 'Phone Number',
                                 BootstrapIcons.telephone_fill,
-                                '012-3456789',
+                                '0123456789',
                                 [
-                                  FilteringTextInputFormatter.allow(
-                                      RegExp(r'[0-9\-]')),
-                                  LengthLimitingTextInputFormatter(13)
+                                  FilteringTextInputFormatter.digitsOnly,
+                                  LengthLimitingTextInputFormatter(11)
                                 ],
                                 (v) => v == null || v.isEmpty
                                     ? 'Required'
