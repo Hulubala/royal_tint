@@ -155,8 +155,30 @@ class SalesPdfExportService {
           color: PdfColor.fromInt(0xFF43A047), // Green
           minTicksVal: 5,
         ),
+        pw.SizedBox(height: 24),
+        
+        _buildBarChartSection(
+          title: 'Vehicle Models Distribution',
+          xLabels: provider.countByCarModel.entries.map((e) => '${e.key.length > 15 ? '${e.key.substring(0, 15)}...' : e.key}\n(${e.value})').toList(),
+          yValues: provider.countByCarModel.values.map((v) => v.toDouble()).toList(),
+          color: PdfColor.fromInt(0xFFE53935), // Red
+          minTicksVal: 5,
+        ),
       ]
     );
+  }
+
+  static double _getNiceInterval(double maxVal) {
+    if (maxVal <= 5) return 1;
+    if (maxVal <= 10) return 2;
+    if (maxVal <= 50) return 10;
+    if (maxVal <= 100) return 20;
+    if (maxVal <= 500) return 100;
+    if (maxVal <= 1000) return 200;
+    if (maxVal <= 2000) return 500;
+    if (maxVal <= 5000) return 1000;
+    if (maxVal <= 10000) return 2000;
+    return 5000;
   }
 
   static pw.Widget _buildBarChartSection({
@@ -170,12 +192,28 @@ class SalesPdfExportService {
     if (yValues.isNotEmpty) {
       maxVal = yValues.reduce((a, b) => a > b ? a : b);
     }
-    if (maxVal == 0) maxVal = minTicksVal.toDouble();
-
-    final List<int> yTicks = List.generate(6, (i) => ((maxVal / 5) * i).round());
-    if (!yTicks.contains(maxVal.round())) {
-      yTicks.add(maxVal.round());
+    
+    bool isCurrency = minTicksVal == 100;
+    
+    double niceInterval = isCurrency ? _getNiceInterval(maxVal) : (maxVal <= 10 ? 2 : _getNiceInterval(maxVal));
+    
+    if (maxVal == 0) {
+       maxVal = isCurrency ? 100 : 10;
+       niceInterval = isCurrency ? 20 : 2;
+    } else {
+       double bufferMax = maxVal * 1.1; // Add 10% headroom
+       niceInterval = isCurrency ? _getNiceInterval(bufferMax) : (bufferMax <= 10 ? 2 : _getNiceInterval(bufferMax));
+       maxVal = (bufferMax / niceInterval).ceil() * niceInterval;
     }
+
+    final Set<int> uniqueTicks = {};
+    for (double i = 0; i <= maxVal; i += niceInterval) {
+      uniqueTicks.add(i.toInt());
+    }
+    final List<int> yTicks = uniqueTicks.toList()..sort();
+
+    final paddedLabels = ['', ...xLabels, ''];
+    final shiftedData = List.generate(yValues.length, (i) => pw.PointChartValue(i.toDouble() + 1, yValues[i]));
 
     return pw.Container(
       child: pw.Column(
@@ -187,20 +225,24 @@ class SalesPdfExportService {
             height: 150,
             child: pw.Chart(
               grid: pw.CartesianGrid(
-                xAxis: pw.FixedAxis.fromStrings(
-                  xLabels,
+                xAxis: pw.FixedAxis(
+                  List.generate(paddedLabels.length, (i) => i),
                   marginStart: 10,
                   marginEnd: 10,
                   ticks: true,
-                  textStyle: const pw.TextStyle(fontSize: 6),
+                  buildLabel: (v) => pw.Text(paddedLabels[v.toInt()], textAlign: pw.TextAlign.center, style: const pw.TextStyle(fontSize: 6)),
                 ),
-                yAxis: pw.FixedAxis(yTicks),
+                yAxis: pw.FixedAxis(
+                  yTicks,
+                  textStyle: const pw.TextStyle(fontSize: 8),
+                  buildLabel: (v) => pw.Text(isCurrency ? 'RM ${v.toInt()}' : v.toInt().toString(), style: const pw.TextStyle(fontSize: 8)),
+                ),
               ),
               datasets: [
                 pw.BarDataSet(
                   color: color,
-                  width: 15,
-                  data: List.generate(yValues.length, (i) => pw.PointChartValue(i.toDouble(), yValues[i])),
+                  width: xLabels.length > 10 ? 10 : (xLabels.length == 1 ? 40 : 25),
+                  data: shiftedData,
                 ),
               ],
             ),

@@ -9,6 +9,19 @@ class SalesOverviewChart extends StatelessWidget {
   static const Color gold = Color(0xFFFFD700);
   static const Color bg = Colors.black;
 
+  double _getNiceInterval(double maxVal) {
+    if (maxVal <= 5) return 1;
+    if (maxVal <= 10) return 2;
+    if (maxVal <= 50) return 10;
+    if (maxVal <= 100) return 20;
+    if (maxVal <= 500) return 100;
+    if (maxVal <= 1000) return 200;
+    if (maxVal <= 2000) return 500;
+    if (maxVal <= 5000) return 1000;
+    if (maxVal <= 10000) return 2000;
+    return 5000;
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<SalesReportProvider>();
@@ -20,7 +33,16 @@ class SalesOverviewChart extends StatelessWidget {
     }
     
     bool isEmpty = chartData.every((e) => e.value == 0);
-    maxY = maxY > 0 ? maxY * 1.2 : 100;
+    
+    if (maxY == 0) {
+       maxY = 100;
+    } else {
+       double bufferMax = maxY * 1.1; // Add 10% headroom
+       double niceInterval = _getNiceInterval(bufferMax);
+       maxY = (bufferMax / niceInterval).ceil() * niceInterval;
+    }
+    
+    double niceInterval = _getNiceInterval(maxY);
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -47,7 +69,8 @@ class SalesOverviewChart extends StatelessWidget {
                   )
                 : BarChart(
               BarChartData(
-                alignment: BarChartAlignment.spaceAround,
+                alignment: BarChartAlignment.center,
+                groupsSpace: chartData.length > 20 ? 12 : (chartData.length > 10 ? 24 : 48),
                 maxY: maxY,
                 barTouchData: BarTouchData(
                   enabled: true,
@@ -86,7 +109,8 @@ class SalesOverviewChart extends StatelessWidget {
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
-                      reservedSize: 70,
+                      reservedSize: 50,
+                      interval: niceInterval,
                       getTitlesWidget: (value, meta) {
                         if (value == 0) return const SizedBox.shrink();
                         return Text('RM ${value.toInt()}', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold));
@@ -99,6 +123,7 @@ class SalesOverviewChart extends StatelessWidget {
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
+                  horizontalInterval: niceInterval,
                   getDrawingHorizontalLine: (value) => FlLine(color: Colors.white24, strokeWidth: 1),
                 ),
                 borderData: FlBorderData(show: false),
@@ -109,7 +134,7 @@ class SalesOverviewChart extends StatelessWidget {
                       BarChartRodData(
                         toY: entry.value.value,
                         color: gold,
-                        width: chartData.length > 20 ? 8 : (chartData.length > 10 ? 12 : 24),
+                        width: chartData.length > 20 ? 12 : (chartData.length > 10 ? 16 : 32),
                         borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
                         backDrawRodData: BackgroundBarChartRodData(
                           show: true,

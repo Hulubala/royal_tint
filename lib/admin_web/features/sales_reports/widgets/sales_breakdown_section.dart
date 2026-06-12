@@ -53,6 +53,19 @@ class SalesBreakdownSection extends StatelessWidget {
     );
   }
 
+  double _getNiceInterval(double maxVal) {
+    if (maxVal <= 5) return 1;
+    if (maxVal <= 10) return 2;
+    if (maxVal <= 50) return 10;
+    if (maxVal <= 100) return 20;
+    if (maxVal <= 500) return 100;
+    if (maxVal <= 1000) return 200;
+    if (maxVal <= 2000) return 500;
+    if (maxVal <= 5000) return 1000;
+    if (maxVal <= 10000) return 2000;
+    return 5000;
+  }
+
   Widget _buildSecondaryBarChart(Map<String, dynamic> dataMap, bool isCurrency) {
     if (dataMap.isEmpty) return const SizedBox();
 
@@ -61,7 +74,15 @@ class SalesBreakdownSection extends StatelessWidget {
       final val = d is double ? d : (d as int).toDouble();
       if (val > maxY) maxY = val;
     }
-    maxY = maxY > 0 ? maxY * 1.2 : 10;
+    
+    if (maxY == 0) {
+       maxY = isCurrency ? 100 : 10;
+    } else {
+       double bufferMax = maxY * 1.1; // Add 10% headroom
+       double niceInterval = isCurrency ? _getNiceInterval(bufferMax) : (bufferMax <= 10 ? 2 : _getNiceInterval(bufferMax));
+       maxY = (bufferMax / niceInterval).ceil() * niceInterval;
+    }
+    double niceInterval = isCurrency ? _getNiceInterval(maxY) : (maxY <= 10 ? 2 : _getNiceInterval(maxY));
     
     final entries = dataMap.entries.toList();
 
@@ -69,7 +90,8 @@ class SalesBreakdownSection extends StatelessWidget {
       height: 300,
       child: BarChart(
         BarChartData(
-          alignment: BarChartAlignment.spaceAround,
+          alignment: BarChartAlignment.center,
+          groupsSpace: entries.length > 20 ? 12 : (entries.length > 10 ? 24 : 48),
           maxY: maxY,
           barTouchData: BarTouchData(
             enabled: true,
@@ -110,7 +132,8 @@ class SalesBreakdownSection extends StatelessWidget {
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: 60,
+                reservedSize: 45,
+                interval: niceInterval,
                 getTitlesWidget: (value, meta) {
                   if (value == 0) return const SizedBox.shrink();
                   final label = isCurrency ? 'RM ${value.toInt()}' : '${value.toInt()}';
@@ -124,6 +147,7 @@ class SalesBreakdownSection extends StatelessWidget {
           gridData: FlGridData(
             show: true,
             drawVerticalLine: false,
+            horizontalInterval: niceInterval,
             getDrawingHorizontalLine: (value) => FlLine(color: Colors.white24, strokeWidth: 1),
           ),
           borderData: FlBorderData(show: false),
@@ -135,7 +159,7 @@ class SalesBreakdownSection extends StatelessWidget {
                 BarChartRodData(
                   toY: val,
                   color: gold,
-                  width: entries.length > 10 ? 12 : 24,
+                  width: entries.length > 20 ? 12 : (entries.length > 10 ? 16 : 32),
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
                   backDrawRodData: BackgroundBarChartRodData(
                     show: true,

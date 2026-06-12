@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:royal_tint/domain/models/appointment_model.dart';
 import 'package:intl/intl.dart';
+import 'package:royal_tint/domain/models/tint_package_model.dart';
+import 'package:royal_tint/data/services/package_service.dart';
 
 class SalesReportProvider extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   
   List<AppointmentModel> _allAppointments = [];
+  List<TintPackageModel> _allPackages = [];
   bool _isLoading = false;
   String? _error;
 
@@ -64,6 +67,9 @@ class SalesReportProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final pkgService = PackageService();
+      _allPackages = await pkgService.getAllPackages();
+
       // Fetch all completed appointments for the branch
       final snapshot = await _firestore
           .collection('appointments')
@@ -124,10 +130,15 @@ class SalesReportProvider extends ChangeNotifier {
 
   Map<String, double> get salesByPackage {
     final map = <String, double>{};
+    for (var pkg in _allPackages) {
+      map[pkg.packageName] = 0.0;
+    }
     for (var app in filteredSales) {
       map[app.packageName] = (map[app.packageName] ?? 0) + app.totalPrice;
     }
-    return _sortMapDesc(map);
+    var entries = map.entries.toList();
+    entries.sort((a, b) => a.key.compareTo(b.key));
+    return Map.fromEntries(entries);
   }
 
   Map<String, int> get countByCarBrand {
