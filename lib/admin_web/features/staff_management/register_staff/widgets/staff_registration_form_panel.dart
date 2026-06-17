@@ -50,7 +50,7 @@ class StaffRegistrationFormPanel extends StatelessWidget {
             _sectionTitle('Password'),
             const SizedBox(height: 8),
             Text(
-              'Set a password for the staff account (min 6 characters)',
+              'Set a password for the staff account (min 8 characters)',
               style: TextStyle(fontSize: 13, color: Colors.grey[400]),
             ),
             const SizedBox(height: 16),
@@ -188,7 +188,7 @@ class StaffRegistrationFormPanel extends StatelessWidget {
       validator: Validators.validatePassword,
       decoration: StaffInputStyles.decoration(
         labelText: 'Password',
-        hintText: 'Enter password (min 6 characters)',
+        hintText: 'Enter password (min 8 characters)',
         prefixIcon: BootstrapIcons.key_fill,
         helperText: 'Required',
       ),

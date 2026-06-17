@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:royal_tint/mobile_app/features/common/auth/services/mobile_auth_service.dart';
 import 'package:royal_tint/core/widgets/password_strength_indicator.dart';
+import 'package:royal_tint/core/utils/validators.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -33,6 +34,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _register() async {
+    final passError = Validators.validatePassword(_passCtrl.text);
+    if (passError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(passError)),
+      );
+      return;
+    }
+
     if (_passCtrl.text != _confirmCtrl.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Passwords do not match.')),

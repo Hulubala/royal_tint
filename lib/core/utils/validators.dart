@@ -13,15 +13,23 @@ class Validators {
     return null;
   }
 
-  // Password validation
   static String? validatePassword(String? value) {
     final password = (value ?? '');
 
     if (password.isEmpty) {
       return 'Please enter a password';
     }
-    if (password.length < 6) {
-      return 'Password must be at least 6 characters';
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters';
+    }
+    if (!RegExp(r'[a-z]').hasMatch(password) || !RegExp(r'[A-Z]').hasMatch(password)) {
+      return 'Password must contain uppercase and lowercase letters';
+    }
+    if (!RegExp(r'[0-9]').hasMatch(password)) {
+      return 'Password must contain at least one number';
+    }
+    if (!RegExp(r'[!@#\$&*~_.]').hasMatch(password)) {
+      return 'Password must contain at least one special character (e.g., !@#)';
     }
     return null;
   }

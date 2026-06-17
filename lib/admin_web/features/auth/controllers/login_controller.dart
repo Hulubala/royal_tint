@@ -69,7 +69,10 @@ class LoginController extends ChangeNotifier {
   }
 
   String? validatePassword(String? value) {
-    return Validators.validatePassword(value);
+    if (value == null || value.isEmpty) {
+      return 'Please enter your password';
+    }
+    return null;
   }
 
   Future<bool> submit() async {
