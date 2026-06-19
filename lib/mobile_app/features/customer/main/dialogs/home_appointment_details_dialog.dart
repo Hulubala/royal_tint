@@ -27,8 +27,10 @@ class HomeAppointmentDetailsDialog extends StatelessWidget {
     Color statusColor;
     switch (appointment.status.toLowerCase()) {
       case 'confirmed':
-      case 'completed':
         statusColor = Colors.green;
+        break;
+      case 'completed':
+        statusColor = Colors.blue;
         break;
       case 'cancelled':
       case 'rejected':

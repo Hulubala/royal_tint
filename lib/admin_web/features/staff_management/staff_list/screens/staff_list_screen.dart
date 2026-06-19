@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bootstrap_icons/bootstrap_icons.dart';
+import 'package:provider/provider.dart';
+import 'package:royal_tint/admin_web/features/auth/providers/auth_provider.dart';
 import 'package:royal_tint/data/services/staff_service.dart';
 import 'package:royal_tint/domain/models/user/staff_model.dart';
 import 'package:intl/intl.dart';
@@ -25,9 +27,22 @@ class _StaffListScreenState extends State<StaffListScreen> {
 
   Future<void> _loadStaff() async {
     setState(() => _isLoading = true);
-    final list = await _staffService.getAllStaff();
+    
+    if (!mounted) return;
+    final authProvider = context.read<AuthProvider>();
+    final branchId = authProvider.branchID;
+    
+    List<StaffModel> list;
+    if (branchId != null && branchId.isNotEmpty) {
+      list = await _staffService.getStaffByBranch(branchId);
+    } else {
+      list = await _staffService.getAllStaff();
+    }
+    
     // Sort staff alphabetically
     list.sort((a, b) => a.name.compareTo(b.name));
+    
+    if (!mounted) return;
     setState(() {
       _staffList = list;
       _isLoading = false;

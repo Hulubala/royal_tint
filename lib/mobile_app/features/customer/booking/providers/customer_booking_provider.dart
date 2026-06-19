@@ -233,8 +233,22 @@ class CustomerBookingProvider extends ChangeNotifier {
   }
 
   bool isTintSelectionValid() {
-    for (final key in tintSelections.keys) {
-      if (tintSelections[key] == null || tintSelections[key]!.isEmpty) return false;
+    if (selectedPackage == null) return false;
+    for (final sectionKey in TintSections.all) {
+      final allowed = allowedCodesFor(packageName: selectedPackage!.packageName, sectionKey: sectionKey);
+      final current = tintSelections[sectionKey];
+      if (current == null || current.isEmpty || !allowed.contains(current)) {
+        if (allowed.isNotEmpty) {
+          tintSelections[sectionKey] = allowed.first;
+        }
+      }
+    }
+    // Also ensure all required keys are present and not empty (unless allowed is empty)
+    for (final key in TintSections.all) {
+      final allowed = allowedCodesFor(packageName: selectedPackage!.packageName, sectionKey: key);
+      if (allowed.isNotEmpty && (tintSelections[key] == null || tintSelections[key]!.isEmpty)) {
+        return false;
+      }
     }
     return true;
   }

@@ -20,6 +20,22 @@ class StaffService {
     }
   }
 
+  /// Get staff members by branch
+  Future<List<StaffModel>> getStaffByBranch(String branchId) async {
+    try {
+      final snapshot = await _firestore.collection('staff')
+          .where('branchID', isEqualTo: branchId)
+          .get();
+          
+      return snapshot.docs
+          .map((doc) => StaffModel.fromFirestore(doc))
+          .toList();
+    } catch (e) {
+      print('❌ Error fetching staff by branch: $e');
+      return [];
+    }
+  }
+
   /// Mark staff absent or present for a specific date
   Future<void> setStaffAbsence(String staffId, String dateString, bool isAbsent) async {
     try {

@@ -123,6 +123,7 @@ class ViewAppointmentDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final isCompleted = appointment.status.toLowerCase() == 'completed';
     final isInProgress = appointment.status.toLowerCase() == 'in-progress';
+    final isCancelled = appointment.status.toLowerCase() == 'cancelled';
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -239,7 +240,7 @@ class ViewAppointmentDialog extends StatelessWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (!isCompleted)
+                      if (!isCompleted && !isCancelled)
                         Padding(
                           padding: const EdgeInsets.only(right: 12),
                           child: ElevatedButton.icon(
@@ -257,7 +258,7 @@ class ViewAppointmentDialog extends StatelessWidget {
                             ),
                           ),
                         ),
-                      if (!isCompleted && !isInProgress)
+                      if (!isCompleted && !isInProgress && !isCancelled)
                         ElevatedButton.icon(
                           onPressed: () {
                             Navigator.pop(context);

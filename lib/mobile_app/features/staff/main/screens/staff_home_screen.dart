@@ -85,6 +85,20 @@ class _StaffHomeScreenState extends State<StaffHomeScreen> {
                         }
 
                         final tasks = snap.data!;
+
+                        tasks.sort((a, b) {
+                          int weight(String s) {
+                            switch (s.toUpperCase()) {
+                              case 'PENDING': return 0;
+                              case 'IN_PROGRESS':
+                              case 'IN-PROGRESS': return 1;
+                              case 'COMPLETED': return 2;
+                              default: return 3;
+                            }
+                          }
+                          return weight(a.status).compareTo(weight(b.status));
+                        });
+
                         if (tasks.isEmpty) {
                           return const _EmptyState(
                             icon: Icons.sentiment_satisfied_alt_rounded,
