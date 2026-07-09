@@ -27,17 +27,21 @@ class AuthRepository {
     // Get user data from Firestore
     final userData = await getUserData(user.uid);
     if (userData == null) {
+      await _firebaseAuth.signOut();
       throw Exception('User data not found in Firestore for uid=${user.uid}');
     }
 
-    // Get manager data if user is a manager
-    ManagerModel? managerData;
-    if (userData.isManager) {
-      managerData = await getManagerData(user.uid);
+    // Ensure user has manager role
+    if (!userData.isManager) {
+      await _firebaseAuth.signOut();
+      throw Exception('not-a-manager');
     }
 
+    // Get manager data
+    final managerData = await getManagerData(user.uid);
     if (managerData == null) {
-      throw Exception('Manager data not found in Firestore for uid=${user.uid}');
+      await _firebaseAuth.signOut();
+      throw Exception('not-a-manager');
     }
 
     return {

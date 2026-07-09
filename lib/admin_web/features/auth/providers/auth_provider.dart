@@ -26,8 +26,8 @@ class AuthProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   // Computed getters
-  bool get isAuthenticated => _firebaseUser != null && _user != null;
-  bool get isManager => _user?.isManager ?? false;
+  bool get isAuthenticated => _firebaseUser != null && _user != null && isManager;
+  bool get isManager => (_user?.isManager ?? false) && _manager != null;
   String? get uid => _firebaseUser?.uid;
   String? get email => _user?.email;
   String? get name => _user?.name;
@@ -49,7 +49,8 @@ class AuthProvider extends ChangeNotifier {
         await _loadUserData(user.uid);
       } else {
         // User signed out, clear data
-        _clearUserData();
+        final wasAccessDenied = _errorMessage == 'not-a-manager';
+        _clearUserData(preserveError: wasAccessDenied);
       }
       
       notifyListeners();
@@ -65,9 +66,25 @@ class AuthProvider extends ChangeNotifier {
       // Load user document
       _user = await _authRepository.getUserData(uid);
       
-      // If user is a manager, load manager data
-      if (_user?.isManager ?? false) {
-        _manager = await _authRepository.getManagerData(uid);
+      // If user is not a manager, immediately sign out and block access
+      if (_user == null || !_user!.isManager) {
+        await _authRepository.signOut();
+        _clearUserData(preserveError: true);
+        _errorMessage = 'not-a-manager';
+        _isLoading = false;
+        notifyListeners();
+        return;
+      }
+      
+      // Load manager data
+      _manager = await _authRepository.getManagerData(uid);
+      if (_manager == null) {
+        await _authRepository.signOut();
+        _clearUserData(preserveError: true);
+        _errorMessage = 'not-a-manager';
+        _isLoading = false;
+        notifyListeners();
+        return;
       }
       
       _errorMessage = null;
@@ -81,10 +98,12 @@ class AuthProvider extends ChangeNotifier {
   }
 
   /// Clear user data on sign out
-  void _clearUserData() {
+  void _clearUserData({bool preserveError = false}) {
     _user = null;
     _manager = null;
-    _errorMessage = null;
+    if (!preserveError) {
+      _errorMessage = null;
+    }
   }
 
   /// Sign in with email and password
@@ -120,7 +139,14 @@ class AuthProvider extends ChangeNotifier {
       return false;
     } catch (e) {
       _isLoading = false;
-      _errorMessage = e.toString();
+      _firebaseUser = null;
+      if (e.toString().contains('not-a-manager')) {
+        _errorMessage = 'not-a-manager';
+        _clearUserData(preserveError: true);
+      } else {
+        _errorMessage = e.toString();
+        _clearUserData();
+      }
       notifyListeners();
 
       if (kDebugMode) {
@@ -295,6 +321,9 @@ class AuthProvider extends ChangeNotifier {
 
   /// Get user-friendly error message
   String getUserFriendlyError(String error) {
+    if (error.contains('not-a-manager')) {
+      return 'Access denied: Only authorized Manager accounts can log in here.';
+    }
     switch (error) {
       case 'user-not-found':
         return 'No account found for this email.';
